@@ -10,6 +10,10 @@
 - Motivation: the original Kinetos firmware exhibited issues (e.g. sometimes failing to turn off even after the Control Pilot (CP) signal was released). This project adapts the OpenEVSE stack to the Kinetos hardware and addresses those problems.
 - This project is community-maintained and not affiliated with Kinetos.
 
+## Usage
+
+Use the wt32-eth01 compile option.
+
 ### Kinetos power meter drivers
 
 Kinetos hardware variants ship with an external Modbus power meter connected to the ESP32 (WT32‑ETH01). This fork supports two meter drivers. Enable exactly one at build time:
