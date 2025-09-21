@@ -11,6 +11,9 @@
 #ifdef ENABLE_SDM630MCT
 #include "sdm630mct.h"
 #endif
+#ifdef ENABLE_KINETOS_METER
+#include "kinetos_meter.h"
+#endif
 
 #ifdef ENABLE_MCP9808
 #ifndef I2C_SDA
@@ -319,79 +322,6 @@ unsigned long EvseMonitor::loop(MicroTasks::WakeReason reason)
     static SDM630MCT meter(Serial2, 0x01, -1);
     static bool meter_init = false;
     if(!meter_init) { meter.begin(9600, true); meter_init = true; }
-    // Read raw 32-bit registers and send events (no error check)
-    {
-      uint32_t v001d = meter.readU32Raw(0x001d);
-      StaticJsonDocument<64> e;
-      e["reg_001d"] = v001d;
-      event_send(e);
-    }
-    {
-      uint32_t v010e = meter.readU32Raw(0x010e);
-      StaticJsonDocument<64> e;
-      e["reg_010e"] = v010e;
-      event_send(e);
-    }
-    {
-      uint32_t v0106 = meter.readU32Raw(0x0106);
-      StaticJsonDocument<64> e;
-      e["reg_0106"] = v0106;
-      event_send(e);
-    }
-    {
-      uint32_t v0100 = meter.readU32Raw(0x0100);
-      StaticJsonDocument<64> e;
-      e["reg_0100"] = v0100;
-      event_send(e);
-    }
-    {
-      uint32_t v0027 = meter.readU32Raw(0x0027);
-      StaticJsonDocument<64> e;
-      e["reg_0027"] = v0027;
-      event_send(e);
-    }
-    {
-      uint32_t v0114 = meter.readU32Raw(0x0114);
-      StaticJsonDocument<64> e;
-      e["reg_0114"] = v0114;
-      event_send(e);
-    }
-    {
-      uint32_t v0112 = meter.readU32Raw(0x0112);
-      StaticJsonDocument<64> e;
-      e["reg_0112"] = v0112;
-      event_send(e);
-    }
-    {
-      uint32_t v0110 = meter.readU32Raw(0x0110);
-      StaticJsonDocument<64> e;
-      e["reg_0110"] = v0110;
-      event_send(e);
-    }
-    {
-      uint32_t v0104 = meter.readU32Raw(0x0104);
-      StaticJsonDocument<64> e;
-      e["reg_0104"] = v0104;
-      event_send(e);
-    }
-    {
-      uint32_t v0102 = meter.readU32Raw(0x0102);
-      StaticJsonDocument<64> e;
-      e["reg_0102"] = v0102;
-      event_send(e);
-    }
-    {
-      uint32_t v010a = meter.readU32Raw(0x010a);
-      StaticJsonDocument<64> e;
-      e["reg_010a"] = v010a;
-      event_send(e);
-    }
-    {
-      uint32_t v0108 = meter.readU32Raw(0x0108);
-      StaticJsonDocument<64> e;
-      e["reg_0108"] = v0108;
-      event_send(e);
-    }
     float mv, mi, mp;
     bool v_ok = meter.getVoltage(mv);
     bool i_ok = meter.getCurrent(mi);
@@ -403,12 +333,28 @@ unsigned long EvseMonitor::loop(MicroTasks::WakeReason reason)
       StaticJsonDocument<128> event;
       if(v_ok) event["voltage"] = _voltage * VOLTS_SCALE_FACTOR;
       if(i_ok) event["amp"] = _amp * AMPS_SCALE_FACTOR;
-      if(p_ok) event["power"] = 3000; //_power * POWER_SCALE_FACTOR;
-      event["power4"] = 2000;
-      _amp = 1234;
+      if(p_ok) event["power"] = _power * POWER_SCALE_FACTOR;
       event_send(event);
       _data_ready.ready(EVSE_MONITOR_AMP_AND_VOLT_DATA_READY);
     // }
+  }
+#elif defined(ENABLE_KINETOS_METER)
+  // Kinetos power meter: read raw registers via new driver and publish scaled values
+  {
+    static KinetosMeter meter(Serial2, 0x01, -1);
+    static bool meter_init = false;
+    if(!meter_init) { meter.begin(9600, true); meter_init = true; }
+
+    _voltage = meter.getVoltage();   // raw / 10.0
+    _amp     = meter.getCurrent();   // raw / 1000.0
+    _power   = meter.getPower();     // raw / 10.0
+
+    StaticJsonDocument<128> event;
+    event["voltage"] = _voltage * VOLTS_SCALE_FACTOR;
+    event["amp"] = _amp * AMPS_SCALE_FACTOR;
+    event["power"] = _power * POWER_SCALE_FACTOR;
+    event_send(event);
+    _data_ready.ready(EVSE_MONITOR_AMP_AND_VOLT_DATA_READY);
   }
 #endif
   
@@ -822,7 +768,7 @@ void EvseMonitor::getStatusFromEvse(bool allowStart)
 
 void EvseMonitor::getChargeCurrentAndVoltageFromEvse()
 {
-#ifndef ENABLE_SDM630MCT
+#if !defined(ENABLE_SDM630MCT) && !defined(ENABLE_KINETOS_METER)
   if(_state.isCharging())
   {
     DBUGLN("Get charge current/voltage status");

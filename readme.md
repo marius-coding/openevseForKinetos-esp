@@ -10,6 +10,40 @@
 - Motivation: the original Kinetos firmware exhibited issues (e.g. sometimes failing to turn off even after the Control Pilot (CP) signal was released). This project adapts the OpenEVSE stack to the Kinetos hardware and addresses those problems.
 - This project is community-maintained and not affiliated with Kinetos.
 
+### Kinetos power meter drivers
+
+Kinetos hardware variants ship with an external Modbus power meter connected to the ESP32 (WT32‑ETH01). This fork supports two meter drivers. Enable exactly one at build time:
+
+- SDM630MCT driver (default for SDM630‑class meters)
+  - Source: src/sdm630mct.h
+  - Build flag: `ENABLE_SDM630MCT`
+  - Reads IEEE‑754 floats using Modbus FC=0x04 from the meter’s standard register map and aggregates 3‑phase values.
+  - EVSE monitor uses these readings to update voltage, current and power.
+
+- Kinetos power meter driver (for Kinetos‑specific meters)
+  - Source: src/kinetos_meter.h
+  - Build flag: `ENABLE_KINETOS_METER`
+  - Reads raw 32‑bit values (two input registers) via Modbus FC=0x04 at:
+    - 0x0100 → Voltage
+    - 0x0106 → Current
+    - 0x010E → Power
+  - Scaling (applied in driver):
+    - Voltage = value / 10.0
+    - Current = value / 1000.0
+    - Power   = value / 10.0
+
+Driver selection and behavior
+- Set the build flag in your PlatformIO environment (only one of the two):
+  - `-DENABLE_SDM630MCT` for SDM630‑class meters
+  - `-DENABLE_KINETOS_METER` for Kinetos meters
+- When either external meter driver is enabled, the EVSE monitor loop reads the meter each cycle and publishes a single event containing top‑level keys: `voltage`, `amp`, `power`.
+  - These are pushed to the web UI over WebSocket and published to MQTT as `<mqtt_topic>/voltage`, `<mqtt_topic>/amp`, `<mqtt_topic>/power`.
+- If neither flag is defined, the firmware falls back to reading current/voltage from the OpenEVSE controller via RAPI.
+
+Hardware notes
+- Default serial for the external meter is UART2 (ESP32 Serial2) at 9600 baud, 8N2 framing. An optional RS485 DE/RE control pin can be configured in the drivers if your transceiver requires it.
+
+
 > **_NOTE:_** Breaking change! This release recommends a minimum of [7.1.3](https://github.com/OpenEVSE/open_evse/releases) of the OpenEVSE firmware, features including Solar Divert and push button menus may not behave as expected on older firmware.
 
 - *For the older WiFi V2.x ESP8266 version (pre June 2020), see the [v2 firmware repository](https://github.com/openevse/ESP8266_WiFi_v2.x/)*
