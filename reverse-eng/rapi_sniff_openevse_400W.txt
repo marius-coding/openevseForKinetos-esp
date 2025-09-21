@@ -1,0 +1,137 @@
+Listening on RX: /dev/ttyUSB1 and TX: /dev/ttyUSB0 at 115200 baud...
+RX -> RAPI Command: OK Args: ['6', '16', '6', '16']                  # Status/feature response
+TX -> RAPI Command: GC Args: []                                      # Get configuration
+TX -> RAPI Command: SC Args: ['0', 'V']                              # Set configuration (slot 0, value V)
+RX -> RAPI Command: NK Args: ['6']                                   # Keepalive/heartbeat
+TX -> RAPI Command: FP Args: ['0', '0', 'Hostname:']                 # Get hostname
+TX -> RAPI Command: FP Args: ['9', '0', '������']                     # Display info (unknown index)
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+TX -> RAPI Command: FP Args: ['15', '0', '������']                    # Display info (unknown index)
+TX -> RAPI Command: FP Args: ['0', '1', 'openevse-7cfc']             # Hostname value
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+TX -> RAPI Command: FP Args: ['13', '1', '������']                    # Display info (unknown index)
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+TX -> RAPI Command: GC Args: []                                      # Get configuration
+TX -> RAPI Command: SC Args: ['0', 'V']                              # Set configuration (slot 0, value V)
+RX -> RAPI Command: OK Args: ['6', '16', '6', '16']                  # Status/feature response
+RX -> RAPI Command: NK Args: ['6']                                   # Keepalive/heartbeat
+TX -> RAPI Command: GC Args: []                                      # Get configuration
+TX -> RAPI Command: SC Args: ['0', 'V']                              # Set configuration (slot 0, value V)
+RX -> RAPI Command: OK Args: ['6', '16', '6', '16']                  # Status/feature response
+RX -> RAPI Command: NK Args: ['6']                                   # Keepalive/heartbeat
+TX -> RAPI Command: GC Args: []                                      # Get configuration
+TX -> RAPI Command: SC Args: ['0', 'V']                              # Set configuration (slot 0, value V)
+RX -> RAPI Command: OK Args: ['6', '16', '6', '16']                  # Status/feature response
+RX -> RAPI Command: NK Args: ['6']                                   # Keepalive/heartbeat
+TX -> RAPI Command: GC Args: []                                      # Get configuration
+RX -> RAPI Command: OK Args: ['6', '16', '6', '16']                  # Status/feature response
+TX -> RAPI Command: SC Args: ['0', 'V']                              # Set configuration (slot 0, value V)
+RX -> RAPI Command: NK Args: ['6']                                   # Keepalive/heartbeat
+TX -> RAPI Command: GC Args: []                                      # Get configuration
+TX -> RAPI Command: SC Args: ['0', 'V']                              # Set configuration (slot 0, value V)
+RX -> RAPI Command: OK Args: ['6', '16', '6', '16']                  # Status/feature response
+RX -> RAPI Command: NK Args: ['6']                                   # Keepalive/heartbeat
+TX -> RAPI Command: FP Args: ['0', '0', 'IP�Address:']               # Get IP address
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+TX -> RAPI Command: FP Args: ['11', '0', '������']                    # Display info (unknown index)
+TX -> RAPI Command: FP Args: ['0', '1', '192.168.0.146']             # IP address value
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+TX -> RAPI Command: FP Args: ['13', '1', '������']                    # Display info (unknown index)
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+TX -> RAPI Command: GC Args: []                                      # Get configuration
+RX -> RAPI Command: OK Args: ['6', '16', '6', '16']                  # Status/feature response
+TX -> RAPI Command: SC Args: ['0', 'V']                              # Set configuration (slot 0, value V)
+RX -> RAPI Command: NK Args: ['6']                                   # Keepalive/heartbeat
+RX -> RAPI Command: OK Args: ['6', '16', '6', '16']                  # Status/feature response
+TX -> RAPI Command: GC Args: []                                      # Get configuration
+TX -> RAPI Command: SC Args: ['0', 'V']                              # Set configuration (slot 0, value V)
+RX -> RAPI Command: NK Args: ['6']                                   # Keepalive/heartbeat
+TX -> RAPI Command: GC Args: []                                      # Get configuration
+TX -> RAPI Command: SC Args: ['0', 'V']                              # Set configuration (slot 0, value V)
+RX -> RAPI Command: OK Args: ['6', '16', '6', '16']                  # Status/feature response
+RX -> RAPI Command: NK Args: ['6']                                   # Keepalive/heartbeat
+RX -> RAPI Command: OK Args: ['6', '16', '6', '16']                  # Status/feature response
+TX -> RAPI Command: GC Args: []                                      # Get configuration
+TX -> RAPI Command: SC Args: ['0', 'V']                              # Set configuration (slot 0, value V)
+RX -> RAPI Command: NK Args: ['6']                                   # Keepalive/heartbeat
+TX -> RAPI Command: GC Args: []                                      # Get configuration
+TX -> RAPI Command: SC Args: ['0', 'V']                              # Set configuration (slot 0, value V)
+RX -> RAPI Command: OK Args: ['6', '16', '6', '16']                  # Status/feature response
+RX -> RAPI Command: NK Args: ['6']                                   # Keepalive/heartbeat
+TX -> RAPI Command: FP Args: ['0', '0', 'Charging���1.61A']           # Get/display charging status
+TX -> RAPI Command: FP Args: ['0', '1', 'Lifetime����11Wh']           # Get/display lifetime energy
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+TX -> RAPI Command: GC Args: []                                      # Get configuration
+RX -> RAPI Command: OK Args: ['6', '16', '6', '16']                  # Status/feature response
+TX -> RAPI Command: SC Args: ['0', 'V']                              # Set configuration (slot 0, value V)
+RX -> RAPI Command: NK Args: ['6']                                   # Keepalive/heartbeat
+TX -> RAPI Command: FP Args: ['0', '0', 'Charging���1.61A']           # Get/display charging status
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+TX -> RAPI Command: GC Args: []                                      # Get configuration
+RX -> RAPI Command: OK Args: ['6', '16', '6', '16']                  # Status/feature response
+TX -> RAPI Command: FP Args: ['0', '0', 'Charging���1.61A']           # Get/display charging status
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+TX -> RAPI Command: GC Args: []                                      # Get configuration
+TX -> RAPI Command: SC Args: ['0', 'V']                              # Set configuration (slot 0, value V)
+RX -> RAPI Command: OK Args: ['6', '16', '6', '16']                  # Status/feature response
+RX -> RAPI Command: NK Args: ['6']                                   # Keepalive/heartbeat
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+TX -> RAPI Command: FP Args: ['0', '0', 'Charging���1.61A']           # Get/display charging status
+TX -> RAPI Command: FP Args: ['0', '1', 'EVSE�Temp��27.7C']          # Get/display temperature
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+TX -> RAPI Command: GC Args: []                                      # Get configuration
+TX -> RAPI Command: SC Args: ['0', 'V']                              # Set configuration (slot 0, value V)
+RX -> RAPI Command: OK Args: ['6', '16', '6', '16']                  # Status/feature response
+RX -> RAPI Command: NK Args: ['6']                                   # Keepalive/heartbeat
+TX -> RAPI Command: FP Args: ['0', '0', 'Charging���1.61A']           # Get/display charging status
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+TX -> RAPI Command: GC Args: []                                      # Get configuration
+RX -> RAPI Command: OK Args: ['6', '16', '6', '16']                  # Status/feature response
+TX -> RAPI Command: SC Args: ['0', 'V']                              # Set configuration (slot 0, value V)
+RX -> RAPI Command: NK Args: ['6']                                   # Keepalive/heartbeat
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+TX -> RAPI Command: FP Args: ['0', '0', 'Charging���1.61A']           # Get/display charging status
+RX -> RAPI Command: OK Args: ['6', '16', '6', '16']                  # Status/feature response
+TX -> RAPI Command: GC Args: []                                      # Get configuration
+TX -> RAPI Command: SC Args: ['0', 'V']                              # Set configuration (slot 0, value V)
+RX -> RAPI Command: NK Args: ['6']                                   # Keepalive/heartbeat
+TX -> RAPI Command: FP Args: ['0', '0', 'Charging���1.61A']           # Get/display charging status
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+TX -> RAPI Command: GC Args: []                                      # Get configuration
+TX -> RAPI Command: SC Args: ['0', 'V']                              # Set configuration (slot 0, value V)
+RX -> RAPI Command: OK Args: ['6', '16', '6', '16']                  # Status/feature response
+RX -> RAPI Command: NK Args: ['6']                                   # Keepalive/heartbeat
+TX -> RAPI Command: FP Args: ['0', '0', 'Charging���1.60A']           # Get/display charging status
+TX -> RAPI Command: FP Args: ['0', '1', 'Energy����13.2Wh']           # Get/display energy counter
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+RX -> RAPI Command: OK Args: ['6', '16', '6', '16']                  # Status/feature response
+TX -> RAPI Command: GC Args: []                                      # Get configuration
+TX -> RAPI Command: SC Args: ['0', 'V']                              # Set configuration (slot 0, value V)
+RX -> RAPI Command: NK Args: ['6']                                   # Keepalive/heartbeat
+TX -> RAPI Command: FP Args: ['0', '0', 'Charging���1.60A']           # Get/display charging status
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+TX -> RAPI Command: GC Args: []                                      # Get configuration
+TX -> RAPI Command: SC Args: ['0', 'V']                              # Set configuration (slot 0, value V)
+RX -> RAPI Command: OK Args: ['6', '16', '6', '16']                  # Status/feature response
+RX -> RAPI Command: NK Args: ['6']                                   # Keepalive/heartbeat
+TX -> RAPI Command: FP Args: ['0', '0', 'Charging���1.60A']           # Get/display charging status
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+TX -> RAPI Command: GC Args: []                                      # Get configuration
+RX -> RAPI Command: OK Args: ['6', '16', '6', '16']                  # Status/feature response
+TX -> RAPI Command: SC Args: ['0', 'V']                              # Set configuration (slot 0, value V)
+RX -> RAPI Command: NK Args: ['6']                                   # Keepalive/heartbeat
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+TX -> RAPI Command: FP Args: ['0', '0', 'Charging���1.60A']           # Get/display charging status
+RX -> RAPI Command: OK Args: ['6', '16', '6', '16']                  # Status/feature response
+TX -> RAPI Command: GC Args: []                                      # Get configuration
+TX -> RAPI Command: FP Args: ['0', '0', 'Charging���1.60A']           # Get/display charging status
+TX -> RAPI Command: SC Args: ['0', 'V']                              # Set configuration (slot 0, value V)
+RX -> RAPI Command: OK Args: []                                      # Generic OK response
+RX -> RAPI Command: NK Args: ['6']                                   # Keepalive/heartbeat
+TX -> RAPI Command: FP Args: ['0', '1', 'Lifetime����15Wh']           # Get/display lifetime energy
+RX -> RAPI Command: OK Args: []                                      # Generic OK response

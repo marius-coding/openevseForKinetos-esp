@@ -1,0 +1,194 @@
+Listening on RX: /dev/ttyUSB1 and TX: /dev/ttyUSB0 at 115200 baud...
+# AI generated comments. 
+# Contains Boot sequence
+RX -> AT Args: ['00', '00', '0', '0200']                    # Query status/version info
+TX -> GV Args: []                                           # Get firmware version
+TX -> GT Args: []                                           # Get time/timer info
+RX -> AB Args: ['00', 'E532_L-8.2.0']                       # Device identification (model/firmware)
+RX -> AT Args: ['02', '02', '16', '0700']                   # Query status/version info
+TX -> GV Args: []                                           # Get firmware version
+TX -> GF Args: []                                           # Get features
+TX -> GE Args: []                                           # Get energy counter
+RX -> OK Args: ['E532_L-8.2.0', '5.2.3']                    # Firmware and protocol version
+RX -> OK Args: ['4', '4', '0']                              # Status/feature response
+RX -> OK Args: ['16', '0125']                               # Status/feature response
+RX -> OK Args: ['6', '16', '16', '16']                      # Status/feature response
+TX -> GC Args: []                                           # Get configuration
+TX -> GU Args: []                                           # Get user info
+TX -> GA Args: []                                           # Get authentication info
+TX -> GI Args: []                                           # Get identification info
+RX -> OK Args: ['0', '0']                                   # User/config response
+RX -> OK Args: ['18', '91']                                 # User/config response
+RX -> OK Args: ['A71DEC47']                                 # Device unique ID
+RX -> NK Args: []                                           # Unknown/keepalive
+TX -> SY Args: ['5', '6']                                   # Set system parameters (likely)
+TX -> GS Args: []                                           # Get system status
+TX -> GP Args: []                                           # Get parameters
+TX -> GU Args: []                                           # Get user info
+RX -> OK Args: ['02', '0', '02', '0700']                    # Status/config response
+RX -> OK Args: ['-2560', '276', '-2560']                    # Parameter response
+RX -> OK Args: ['0', '0']                                   # User/config response
+TX -> FF Args: ['B', '0']                                   # Set feature/flag (likely)
+TX -> F0 Args: ['0']                                        # Set feature/flag (likely)
+TX -> FB Args: ['3']                                        # Set feature/flag (likely)
+RX -> NK Args: []                                           # Unknown/keepalive
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> FP Args: ['0', '0', 'Hostname:']                      # Get hostname
+TX -> FP Args: ['9', '0', '…']                              # Get/display info (unknown index)
+TX -> FP Args: ['15', '0', '…']                             # Get/display info (unknown index)
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> FP Args: ['0', '1', 'kinetos-7cfc']                   # Hostname value
+TX -> FP Args: ['12', '1', '…']                             # Display info (unknown index)
+TX -> F2 Args: ['0']                                        # Set/display info (unknown)
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+RX -> NK Args: []                                           # Unknown/keepalive
+TX -> GT Args: []                                           # Get time/timer info
+TX -> GD Args: []                                           # Get device info
+RX -> NK Args: []                                           # Unknown/keepalive
+TX -> SV Args: ['228700']                                   # Set voltage (likely)
+RX -> OK Args: []                                           # Generic OK response
+TX -> GL Args: []                                           # Get lifetime info
+RX -> OK Args: ['16', '16']                                 # Lifetime response
+TX -> SV Args: ['228800']                                   # Set voltage (likely)
+TX -> T1 Args: ['89']                                       # Set timer/state
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> FP Args: ['0', '0', 'IP Address:']                    # Get IP address
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> FP Args: ['11', '0', '…']                             # Display info (unknown index)
+TX -> FP Args: ['0', '1', '192.168.0.146']                  # IP address value
+TX -> FP Args: ['13', '1', '…']                             # Display info (unknown index)
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> SV Args: ['228600']                                   # Set voltage (likely)
+TX -> T1 Args: ['89']                                       # Set timer/state
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> T1 Args: ['89']                                       # Set timer/state
+TX -> SV Args: ['228800']                                   # Set voltage (likely)
+TX -> T1 Args: ['89']                                       # Set timer/state
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> FP Args: ['0', '0', 'Kinetos ETH/WiFi']               # Get device type
+TX -> FP Args: ['0', '1', 'Ver.']                           # Get firmware version label
+TX -> FP Args: ['5', '1', '…']                              # Display info (unknown index)
+TX -> FP Args: ['11', '1', '…']                             # Display info (unknown index)
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> FP Args: ['5', '1', '4.1.4']                          # Firmware version value
+TX -> FP Args: ['10', '1', '…']                             # Display info (unknown index)
+RX -> OK Args: []                                           # Generic OK response
+TX -> SV Args: ['228700']                                   # Set voltage (likely)
+RX -> OK Args: []                                           # Generic OK response
+TX -> T1 Args: ['89']                                       # Set timer/state
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> SV Args: ['228600']                                   # Set voltage (likely)
+TX -> T1 Args: ['89']                                       # Set timer/state
+RX -> OK Args: []                                           # Generic OK response
+TX -> FP Args: ['0', '0', 'Connected…16A']                  # Get connection status
+TX -> FP Args: ['0', '1', 'Energy…0.0Wh']                   # Get energy counter
+TX -> SV Args: ['228700']                                   # Set voltage (likely)
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> T1 Args: ['89']                                       # Set timer/state
+TX -> T1 Args: ['89']                                       # Set timer/state
+RX -> OK Args: []                                           # Generic OK response
+TX -> SV Args: ['228900']                                   # Set voltage (likely)
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> T0 Args: ['0', '0', '0']                              # Set timer/state
+TX -> T1 Args: ['89']                                       # Set timer/state
+RX -> OK Args: []                                           # Generic OK response
+TX -> FP Args: ['0', '1', 'Lifetime…0kWh']                  # Get lifetime energy
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> SV Args: ['228500']                                   # Set voltage (likely)
+TX -> T0 Args: ['0', '0', '0']                              # Set timer/state
+TX -> T1 Args: ['89']                                       # Set timer/state
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> SV Args: ['228600']                                   # Set voltage (likely)
+TX -> T0 Args: ['0', '0', '0']                              # Set timer/state
+TX -> T1 Args: ['89']                                       # Set timer/state
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> FP Args: ['0', '1', 'Time…18:32:41']                  # Get system time
+TX -> SV Args: ['228800']                                   # Set voltage (likely)
+TX -> T0 Args: ['0', '0', '0']                              # Set timer/state
+TX -> T1 Args: ['89']                                       # Set timer/state
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> FP Args: ['0', '1', 'Time…18:32:42']                  # Get system time
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> FP Args: ['0', '1', 'Time…18:32:43']                  # Get system time
+RX -> OK Args: []                                           # Generic OK response
+TX -> T0 Args: ['0', '0', '0']                              # Set timer/state
+TX -> T1 Args: ['89']                                       # Set timer/state
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> FP Args: ['0', '1', 'Time…18:32:44']                  # Get system time
+RX -> OK Args: []                                           # Generic OK response
+TX -> FP Args: ['0', '1', 'Time…18:32:45']                  # Get system time
+RX -> OK Args: []                                           # Generic OK response
+TX -> FP Args: ['0', '1', 'Date…21/09/2025']                # Get system date
+TX -> SV Args: ['228600']                                   # Set voltage (likely)
+TX -> T0 Args: ['0', '0', '0']                              # Set timer/state
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> T1 Args: ['89']                                       # Set timer/state
+RX -> OK Args: []                                           # Generic OK response
+TX -> SV Args: ['228800']                                   # Set voltage (likely)
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> T0 Args: ['0', '0', '0']                              # Set timer/state
+TX -> T1 Args: ['89']                                       # Set timer/state
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> T0 Args: ['0', '0', '0']                              # Set timer/state
+TX -> T1 Args: ['89']                                       # Set timer/state
+TX -> FP Args: ['0', '1', 'EVSE Temp…28.0C']                # Get temperature
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> SV Args: ['228700']                                   # Set voltage (likely)
+TX -> T0 Args: ['0', '0', '0']                              # Set timer/state
+TX -> T1 Args: ['89']                                       # Set timer/state
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> SV Args: ['228500']                                   # Set voltage (likely)
+TX -> T0 Args: ['0', '0', '0']                              # Set timer/state
+TX -> T1 Args: ['89']                                       # Set timer/state
+RX -> OK Args: []                                           # Generic OK response
+TX -> SV Args: ['228600']                                   # Set voltage (likely)
+TX -> T0 Args: ['0', '0', '0']                              # Set timer/state
+TX -> T1 Args: ['89']                                       # Set timer/state
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> FP Args: ['0', '1', 'Energy…0.0Wh']                   # Get energy counter
+TX -> SV Args: ['228800']                                   # Set voltage (likely)
+TX -> T0 Args: ['0', '0', '0']                              # Set timer/state
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> T1 Args: ['89']                                       # Set timer/state

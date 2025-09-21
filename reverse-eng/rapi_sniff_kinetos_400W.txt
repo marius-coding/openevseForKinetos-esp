@@ -1,0 +1,150 @@
+Listening on RX: /dev/ttyUSB1 and TX: /dev/ttyUSB0 at 115200 baud...
+# AI generated comments. 
+# charging with ~400W load on L1
+TX -> SV Args: ['228800']                                   # Set voltage (likely)
+TX -> T0 Args: ['0', '0', '0']                              # Set timer/state
+TX -> T1 Args: ['89']                                       # Set timer/state
+RX -> AT Args: ['03', '03', '16', '0540']                   # Query status/version info
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> T1 Args: ['89']                                       # Set timer/state
+TX -> GU Args: []                                           # Get user info
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: ['0', '89']                                  # User/config response
+TX -> FB Args: ['4']                                        # Set feature/flag (likely)
+TX -> FP Args: ['0', '0', 'Charging…0.00kW']                # Get/display charging status
+TX -> FP Args: ['0', '1', 'EVSE Temp…29.0C']                # Get/display temperature
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> GG Args: []                                           # Get grid/energy info (likely)
+RX -> OK Args: ['0', '228800']                              # Grid/energy response
+RX -> OK Args: ['0', '0', '0']                              # Timer/state response
+TX -> T2 Args: []                                           # Set timer/state (likely)
+TX -> GU Args: []                                           # Get user info
+RX -> OK Args: ['320400', '89']                             # Energy/user response
+TX -> SV Args: ['228600']                                   # Set voltage (likely)
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> T0 Args: ['0', '0', '0']                              # Set timer/state
+TX -> T1 Args: ['89']                                       # Set timer/state
+TX -> FP Args: ['0', '0', 'Charging…0.00kW']                # Get/display charging status
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> GG Args: []                                           # Get grid/energy info (likely)
+TX -> T2 Args: []                                           # Set timer/state (likely)
+RX -> OK Args: ['0', '228600']                              # Grid/energy response
+RX -> OK Args: ['0', '0', '0']                              # Timer/state response
+TX -> FP Args: ['0', '0', 'Charging…0.06kW']                # Get/display charging status
+RX -> OK Args: []                                           # Generic OK response
+TX -> GG Args: []                                           # Get grid/energy info (likely)
+TX -> T2 Args: []                                           # Set timer/state (likely)
+RX -> OK Args: ['0', '228600']                              # Grid/energy response
+RX -> OK Args: ['0', '0', '0']                              # Timer/state response
+RX -> OK Args: ['320400', '89']                             # Energy/user response
+TX -> GU Args: []                                           # Get user info
+TX -> SV Args: ['228500']                                   # Set voltage (likely)
+TX -> T0 Args: ['0', '0', '0']                              # Set timer/state
+TX -> T1 Args: ['89']                                       # Set timer/state
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> FP Args: ['0', '0', 'Charging…0.38kW']                # Get/display charging status
+RX -> OK Args: []                                           # Generic OK response
+TX -> GG Args: []                                           # Get grid/energy info (likely)
+RX -> OK Args: ['0', '228500']                              # Grid/energy response
+RX -> OK Args: ['0', '0', '0']                              # Timer/state response
+TX -> T2 Args: []                                           # Set timer/state (likely)
+RX -> OK Args: []                                           # Generic OK response
+TX -> FP Args: ['0', '0', 'Charging…0.38kW']                # Get/display charging status
+TX -> FP Args: ['0', '1', 'Energy…89.0Wh']                  # Get/display energy counter
+RX -> OK Args: []                                           # Generic OK response
+TX -> GG Args: []                                           # Get grid/energy info (likely)
+TX -> T2 Args: []                                           # Set timer/state (likely)
+RX -> OK Args: ['0', '228500']                              # Grid/energy response
+RX -> OK Args: ['0', '0', '0']                              # Timer/state response
+RX -> OK Args: ['320400', '89']                             # Energy/user response
+TX -> GU Args: []                                           # Get user info
+TX -> SV Args: ['227800']                                   # Set voltage (likely)
+TX -> T0 Args: ['1687', '0', '0']                           # Set timer/state
+TX -> T1 Args: ['89']                                       # Set timer/state
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> SL Args: ['1']                                        # Set limit/state (likely)
+RX -> OK Args: []                                           # Generic OK response
+TX -> FP Args: ['0', '0', 'Charging…0.38kW']                # Get/display charging status
+RX -> OK Args: []                                           # Generic OK response
+TX -> GG Args: []                                           # Get grid/energy info (likely)
+TX -> T2 Args: []                                           # Set timer/state (likely)
+RX -> OK Args: ['1687', '230000']                           # Grid/energy response
+RX -> OK Args: ['1687', '0', '0']                           # Timer/state response
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> FP Args: ['0', '0', 'Charging…0.38kW']                # Get/display charging status
+TX -> SV Args: ['227700']                                   # Set voltage (likely)
+TX -> T0 Args: ['1656', '0', '0']                           # Set timer/state
+TX -> T1 Args: ['89']                                       # Set timer/state
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> GG Args: []                                           # Get grid/energy info (likely)
+TX -> T2 Args: []                                           # Set timer/state (likely)
+RX -> OK Args: ['1656', '227700']                           # Grid/energy response
+RX -> OK Args: ['1656', '0', '0']                           # Timer/state response
+RX -> OK Args: ['320400', '89']                             # Energy/user response
+TX -> GU Args: []                                           # Get user info
+RX -> OK Args: []                                           # Generic OK response
+TX -> FP Args: ['0', '0', 'Charging…0.37kW']                # Get/display charging status
+TX -> GG Args: []                                           # Get grid/energy info (likely)
+TX -> T2 Args: []                                           # Set timer/state (likely)
+RX -> OK Args: ['1656', '227700']                           # Grid/energy response
+RX -> OK Args: ['1656', '0', '0']                           # Timer/state response
+TX -> SV Args: ['227700']                                   # Set voltage (likely)
+TX -> T0 Args: ['1643', '0', '0']                           # Set timer/state
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> T1 Args: ['89']                                       # Set timer/state
+TX -> FP Args: ['0', '0', 'Charging…0.37kW']                # Get/display charging status
+RX -> OK Args: []                                           # Generic OK response
+TX -> FP Args: ['0', '1', 'Lifetime…0kWh']                  # Get/display lifetime energy
+RX -> OK Args: []                                           # Generic OK response
+TX -> GG Args: []                                           # Get grid/energy info (likely)
+TX -> T2 Args: []                                           # Set timer/state (likely)
+TX -> GU Args: []                                           # Get user info
+RX -> OK Args: ['1643', '227700']                           # Grid/energy response
+RX -> OK Args: ['1643', '0', '0']                           # Timer/state response
+RX -> OK Args: ['320400', '89']                             # Energy/user response
+TX -> FP Args: ['0', '0', 'Charging…0.37kW']                # Get/display charging status
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: ['1643', '227700']                           # Grid/energy response
+TX -> GG Args: []                                           # Get grid/energy info (likely)
+TX -> T2 Args: []                                           # Set timer/state (likely)
+RX -> OK Args: ['1643', '0', '0']                           # Timer/state response
+TX -> SV Args: ['227800']                                   # Set voltage (likely)
+TX -> T0 Args: ['1634', '0', '0']                           # Set timer/state
+TX -> T1 Args: ['89']                                       # Set timer/state
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> FP Args: ['0', '0', 'Charging…0.37kW']                # Get/display charging status
+RX -> OK Args: []                                           # Generic OK response
+TX -> GG Args: []                                           # Get grid/energy info (likely)
+TX -> T2 Args: []                                           # Set timer/state (likely)
+TX -> GU Args: []                                           # Get user info
+RX -> OK Args: ['1634', '227800']                           # Grid/energy response
+RX -> OK Args: ['1634', '0', '0']                           # Timer/state response
+RX -> OK Args: ['320400', '89']                             # Energy/user response
+TX -> FP Args: ['0', '0', 'Charging…0.37kW']                # Get/display charging status
+RX -> OK Args: []                                           # Generic OK response
+TX -> SV Args: ['227600']                                   # Set voltage (likely)
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: []                                           # Generic OK response
+TX -> T0 Args: ['1622', '0', '0']                           # Set timer/state
+TX -> T1 Args: ['89']                                       # Set timer/state
+TX -> GG Args: []                                           # Get grid/energy info (likely)
+TX -> T2 Args: []                                           # Set timer/state (likely)
+RX -> OK Args: []                                           # Generic OK response
+RX -> OK Args: ['1622', '227600']                           # Grid/energy response
+RX -> OK Args: ['1622', '0', '0']                           # Timer/state response
+TX -> FP Args: ['0', '0', 'Charging…0.37kW']                # Get/display charging status

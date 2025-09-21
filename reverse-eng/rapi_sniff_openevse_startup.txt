@@ -1,0 +1,25 @@
+Listening on RX: /dev/ttyUSB1 and TX: /dev/ttyUSB0 at 115200 baud...
+RX -> RAPI Command: AT Args: ['00', '00', '0', '0200']                # Query status/version info
+TX -> RAPI Command: GV Args: []                                       # Get firmware version
+RX -> RAPI Command: AB Args: ['00', 'E532_L-8.2.0']                   # Device identification (model/firmware)
+RX -> RAPI Command: AT Args: ['02', '02', '16', '0700']               # Query status/version info
+TX -> RAPI Command: GT Args: []                                       # Get time/timer info
+RX -> RAPI Command: NK Args: []                                       # Keepalive/heartbeat
+TX -> RAPI Command: GV Args: []                                       # Get firmware version
+RX -> RAPI Command: OK Args: ['E532_L-8.2.0', '5.2.3']                # Firmware and protocol version
+RX -> RAPI Command: OK Args: ['4', '4', '0']                          # Status/feature response
+TX -> RAPI Command: GF Args: []                                       # Get features
+TX -> RAPI Command: GE Args: []                                       # Get energy counter
+RX -> RAPI Command: OK Args: ['16', '0125']                           # Status/feature response
+TX -> RAPI Command: GC Args: []                                       # Get configuration
+RX -> RAPI Command: OK Args: ['6', '16', '16', '16']                  # Status/feature response
+TX -> RAPI Command: GA Args: []                                       # Get authentication info
+RX -> RAPI Command: OK Args: ['18', '91']                             # Authentication response
+TX -> RAPI Command: GI Args: []                                       # Get identification info
+RX -> RAPI Command: OK Args: ['A71DEC47']                             # Device unique ID
+RX -> RAPI Command: NK Args: []                                       # Keepalive/heartbeat
+TX -> RAPI Command: SY Args: ['5', '6']                               # Set system parameters (likely)
+TX -> RAPI Command: GS Args: []                                       # Get system status
+RX -> RAPI Command: OK Args: ['02', '0', '02', '0700']                # Status/config response
+TX -> RAPI Command: GP Args: []                                       # Get parameters
+RX -> RAPI Command: OK Args: ['-2560', '270', '-2560']                # Parameter response
