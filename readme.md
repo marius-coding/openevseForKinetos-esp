@@ -10,6 +10,15 @@
 - Motivation: the original Kinetos firmware exhibited issues (e.g. sometimes failing to turn off even after the Control Pilot (CP) signal was released). This project adapts the OpenEVSE stack to the Kinetos hardware and addresses those problems.
 - This project is community-maintained and not affiliated with Kinetos.
 
+
+## Reverse Engineering Documentation
+
+For detailed technical analysis, protocol comparisons, and annotated communication logs between Kinetos and OpenEVSE, see the reverse engineering documents:
+
+- [Reverse Engineering & Protocol Analysis](reverse-eng/):
+  - Contains in-depth comparison of RAPI communication, annotated serial logs, and hardware integration notes for Kinetos and OpenEVSE.
+  - Useful for developers, maintainers, and anyone troubleshooting or adapting firmware for Kinetos hardware.
+
 ## Usage
 
 Use the wt32-eth01 compile option.
