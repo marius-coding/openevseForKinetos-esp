@@ -233,14 +233,20 @@ bool EnergyMeter::update()
 
     DBUGLN("Energy Meter: Incrementing");
     // accumulate data
+#ifdef ENABLE_SDM630MCT
+    // Use measured active power directly from the meter (already includes all phases)
+    double p = _monitor->getPower(); // Watts
+    double mws = p * dms;            // milliWatt-seconds
+#else
     double v = _monitor->getVoltage();
     double a = _monitor->getAmps();
     double mws = v * a * dms;
     if (config_threephase_enabled())
     {
-      // Multiply calculation by 3 to get 3-phase energy.
+      // Multiply calculation by 3 to get 3-phase energy when using single-phase EVSE sensor
       mws *= 3;
     }
+#endif
 
     // convert to w/h
     double wh = mws / 3600000;

@@ -8,6 +8,9 @@
 #include "evse_monitor.h"
 #include "event.h"
 #include "debug.h"
+#ifdef ENABLE_SDM630MCT
+#include "sdm630mct.h"
+#endif
 
 #ifdef ENABLE_MCP9808
 #ifndef I2C_SDA
@@ -310,6 +313,32 @@ void EvseMonitor::updateCurrentSettings(long min_current, long max_hardware_curr
 unsigned long EvseMonitor::loop(MicroTasks::WakeReason reason)
 {
   DBUG("EVSE monitor woke: ");
+#ifdef ENABLE_SDM630MCT
+  // When meter is present, poll it each loop cycle to update readings
+  {
+    static SDM630MCT meter(Serial2, 0x01, -1);
+    static bool meter_init = false;
+    if(!meter_init) { meter.begin(9600, true); meter_init = true; }
+    float mv, mi, mp;
+    bool v_ok = meter.getVoltage(mv);
+    bool i_ok = meter.getCurrent(mi);
+    bool p_ok = meter.getPower(mp);
+    if(v_ok) { _voltage = mv; }
+    if(i_ok) { _amp = mi; }
+    if(p_ok) { _power = mp; }
+    // if (v_ok || i_ok || p_ok) {
+      StaticJsonDocument<64> event;
+      if(v_ok) event["voltage"] = _voltage * VOLTS_SCALE_FACTOR;
+      if(i_ok) event["amp"] = _amp * AMPS_SCALE_FACTOR;
+      if(p_ok) event["power"] = 3000; //_power * POWER_SCALE_FACTOR;
+      event["power4"] = 2000;
+      _amp = 1234;
+      event_send(event);
+      _data_ready.ready(EVSE_MONITOR_AMP_AND_VOLT_DATA_READY);
+    // }
+  }
+#endif
+  
   DBUG(WakeReason_Scheduled == reason ? "WakeReason_Scheduled" :
        WakeReason_Event == reason ? "WakeReason_Event" :
        WakeReason_Message == reason ? "WakeReason_Message" :
@@ -530,8 +559,8 @@ void EvseMonitor::setVoltage(double volts, std::function<void(int ret)> callback
       if(RAPI_RESPONSE_OK == ret) {
         _voltage = volts;
         StaticJsonDocument<128> event;
-        event["voltage"] = _voltage;
-        event_send(event);
+        // event["voltage"] = _voltage;
+        // event_send(event);
       }
 
       if(callback) {
@@ -720,6 +749,7 @@ void EvseMonitor::getStatusFromEvse(bool allowStart)
 
 void EvseMonitor::getChargeCurrentAndVoltageFromEvse()
 {
+#ifndef ENABLE_SDM630MCT
   if(_state.isCharging())
   {
     DBUGLN("Get charge current/voltage status");
@@ -741,6 +771,7 @@ void EvseMonitor::getChargeCurrentAndVoltageFromEvse()
         event["amp"] = _amp * AMPS_SCALE_FACTOR;;
         event["voltage"] = _voltage * VOLTS_SCALE_FACTOR;
         event["power"] = _power * POWER_SCALE_FACTOR;
+        event["power3"] = 2000;
         event_send(event);
         _data_ready.ready(EVSE_MONITOR_AMP_AND_VOLT_DATA_READY);
       }
@@ -748,6 +779,10 @@ void EvseMonitor::getChargeCurrentAndVoltageFromEvse()
   } else {
     _data_ready.ready(EVSE_MONITOR_AMP_AND_VOLT_DATA_READY);
   }
+#else
+  // With external meter we have already updated _amp/_voltage/_power in loop()
+  _data_ready.ready(EVSE_MONITOR_AMP_AND_VOLT_DATA_READY);
+#endif
   // Update _energyMeter
   _energyMeter.update();
 }

@@ -62,7 +62,7 @@ void setSerial(const char * defaultSerial)
     SERIAL_DRIVER_NAME[127] = '\0';
 }
 
-// Gets Defualt UART device driver name
+// Gets Defualt  device driver name
 std::string getSerial_std(void)
 {
     return SERIAL_DRIVER_NAME;
