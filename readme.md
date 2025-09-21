@@ -1,5 +1,15 @@
 # OpenEVSE WiFi for ESP32
 
+## Fork for Kinetos wallbox
+
+- This repository is a fork of OpenEVSE WiFi for ESP32 adapted to run on the Kinetos AC wallbox hardware.
+- Kinetos (the company) has gone out of business; this fork exists to keep existing units usable.
+- Hardware similarities and differences:
+  - EVSE controller MCU: LGT8F328P (ATmega328P-compatible) instead of ATmega328P
+  - Energy/power metering: external Modbus meter connected to the WT32-ETH01 module (ESP32 with Ethernet), rather than to the EVSE controller
+- Motivation: the original Kinetos firmware exhibited issues (e.g. sometimes failing to turn off even after the Control Pilot (CP) signal was released). This project adapts the OpenEVSE stack to the Kinetos hardware and addresses those problems.
+- This project is community-maintained and not affiliated with Kinetos.
+
 > **_NOTE:_** Breaking change! This release recommends a minimum of [7.1.3](https://github.com/OpenEVSE/open_evse/releases) of the OpenEVSE firmware, features including Solar Divert and push button menus may not behave as expected on older firmware.
 
 - *For the older WiFi V2.x ESP8266 version (pre June 2020), see the [v2 firmware repository](https://github.com/openevse/ESP8266_WiFi_v2.x/)*
