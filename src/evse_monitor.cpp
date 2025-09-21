@@ -319,6 +319,79 @@ unsigned long EvseMonitor::loop(MicroTasks::WakeReason reason)
     static SDM630MCT meter(Serial2, 0x01, -1);
     static bool meter_init = false;
     if(!meter_init) { meter.begin(9600, true); meter_init = true; }
+    // Read raw 32-bit registers and send events (no error check)
+    {
+      uint32_t v001d = meter.readU32Raw(0x001d);
+      StaticJsonDocument<64> e;
+      e["reg_001d"] = v001d;
+      event_send(e);
+    }
+    {
+      uint32_t v010e = meter.readU32Raw(0x010e);
+      StaticJsonDocument<64> e;
+      e["reg_010e"] = v010e;
+      event_send(e);
+    }
+    {
+      uint32_t v0106 = meter.readU32Raw(0x0106);
+      StaticJsonDocument<64> e;
+      e["reg_0106"] = v0106;
+      event_send(e);
+    }
+    {
+      uint32_t v0100 = meter.readU32Raw(0x0100);
+      StaticJsonDocument<64> e;
+      e["reg_0100"] = v0100;
+      event_send(e);
+    }
+    {
+      uint32_t v0027 = meter.readU32Raw(0x0027);
+      StaticJsonDocument<64> e;
+      e["reg_0027"] = v0027;
+      event_send(e);
+    }
+    {
+      uint32_t v0114 = meter.readU32Raw(0x0114);
+      StaticJsonDocument<64> e;
+      e["reg_0114"] = v0114;
+      event_send(e);
+    }
+    {
+      uint32_t v0112 = meter.readU32Raw(0x0112);
+      StaticJsonDocument<64> e;
+      e["reg_0112"] = v0112;
+      event_send(e);
+    }
+    {
+      uint32_t v0110 = meter.readU32Raw(0x0110);
+      StaticJsonDocument<64> e;
+      e["reg_0110"] = v0110;
+      event_send(e);
+    }
+    {
+      uint32_t v0104 = meter.readU32Raw(0x0104);
+      StaticJsonDocument<64> e;
+      e["reg_0104"] = v0104;
+      event_send(e);
+    }
+    {
+      uint32_t v0102 = meter.readU32Raw(0x0102);
+      StaticJsonDocument<64> e;
+      e["reg_0102"] = v0102;
+      event_send(e);
+    }
+    {
+      uint32_t v010a = meter.readU32Raw(0x010a);
+      StaticJsonDocument<64> e;
+      e["reg_010a"] = v010a;
+      event_send(e);
+    }
+    {
+      uint32_t v0108 = meter.readU32Raw(0x0108);
+      StaticJsonDocument<64> e;
+      e["reg_0108"] = v0108;
+      event_send(e);
+    }
     float mv, mi, mp;
     bool v_ok = meter.getVoltage(mv);
     bool i_ok = meter.getCurrent(mi);
@@ -327,7 +400,7 @@ unsigned long EvseMonitor::loop(MicroTasks::WakeReason reason)
     if(i_ok) { _amp = mi; }
     if(p_ok) { _power = mp; }
     // if (v_ok || i_ok || p_ok) {
-      StaticJsonDocument<64> event;
+      StaticJsonDocument<128> event;
       if(v_ok) event["voltage"] = _voltage * VOLTS_SCALE_FACTOR;
       if(i_ok) event["amp"] = _amp * AMPS_SCALE_FACTOR;
       if(p_ok) event["power"] = 3000; //_power * POWER_SCALE_FACTOR;

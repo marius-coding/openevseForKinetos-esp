@@ -107,6 +107,62 @@ class SDM630MCT {
   bool getPowerL2(float &p) { return readFloat(REG_POWER_L2, p); }
   bool getPowerL3(float &p) { return readFloat(REG_POWER_L3, p); }
 
+  // Read a raw 32-bit (2-register) value. No error checking.
+  // Sends Modbus FC=0x04 for 2 registers, reads response, ignores the first
+  // data byte (byte count) and returns the following 4 bytes as a big-endian
+  // 32-bit integer.
+  uint32_t readU32Raw(uint16_t reg) {
+    uint8_t req[8];
+    req[0] = _addr;
+    req[1] = FC_READ_INPUT_REGISTERS;
+    req[2] = (uint8_t)(reg >> 8);
+    req[3] = (uint8_t)(reg & 0xFF);
+    req[4] = 0x00;
+    req[5] = 0x02; // quantity of registers = 2 (32-bit value)
+    uint16_t crc = crc16_modbus(req, 6);
+    req[6] = (uint8_t)(crc & 0xFF);        // CRC lo
+    req[7] = (uint8_t)((crc >> 8) & 0xFF); // CRC hi
+
+    flushInput();
+
+    // TX enable if RS485
+    if (_de_re_pin >= 0) {
+      digitalWrite(_de_re_pin, HIGH);
+      delayMicroseconds(10);
+    }
+
+    (void)_serial.write(req, sizeof(req));
+    _serial.flush(); // wait for TX done
+
+    // Back to RX
+    if (_de_re_pin >= 0) {
+      delayMicroseconds(10);
+      digitalWrite(_de_re_pin, LOW);
+    }
+
+    // Inter-frame delay to allow slave to respond
+    delayMicroseconds(_inter_frame_delay_us);
+
+    // Expecting 9 bytes in total; we will just grab up to 9 and ignore checks
+    uint8_t resp[9] = {0};
+    size_t got = 0;
+    unsigned long start = millis();
+    while ((millis() - start) < _timeout_ms && got < sizeof(resp)) {
+      if (_serial.available()) {
+        resp[got++] = (uint8_t)_serial.read();
+      } else {
+        delay(1);
+      }
+    }
+
+    // Extract big-endian 32-bit from payload (after byte count)
+    uint32_t val = ((uint32_t)resp[3] << 24) |
+                   ((uint32_t)resp[4] << 16) |
+                   ((uint32_t)resp[5] << 8)  |
+                   ((uint32_t)resp[6]);
+    return val;
+  }
+
  private:
   // SDM630 register addresses (2-register IEEE-754 each)
   static constexpr uint16_t REG_VOLTAGE_L1N = 0x0000;
