@@ -98,6 +98,9 @@ Driver selection and behavior
 Hardware notes
 - Default serial for the external meter is UART2 (ESP32 Serial2) at 9600 baud, 8N2 framing. An optional RS485 DE/RE control pin can be configured in the drivers if your transceiver requires it.
 
+---
+
+# OpenEVSE
 
 > **_NOTE:_** Breaking change! This release recommends a minimum of [7.1.3](https://github.com/OpenEVSE/open_evse/releases) of the OpenEVSE firmware, features including Solar Divert and push button menus may not behave as expected on older firmware.
 
