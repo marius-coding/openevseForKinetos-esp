@@ -14,6 +14,57 @@
 
 Use the wt32-eth01 compile option.
 
+### Building and Uploading Firmware to WT32-ETH01 (VS Code UI)
+
+#### 1. Build the Firmware (VS Code PlatformIO Extension)
+
+1. Open the project folder in Visual Studio Code.
+2. Install the PlatformIO extension from the VS Code Marketplace if not already installed.
+3. In the PlatformIO sidebar:
+   - Click "Project Tasks" > "env:wt32-eth01" > "Build" to compile the firmware for WT32-ETH01.
+   - The first build may take 15–45 minutes (downloads ESP32 toolchain). Do not cancel the build even if it appears slow.
+
+#### 2. Prepare the WT32-ETH01 Board for Flashing
+
+- Use a standard USB-to-UART adapter for flashing.
+- Connect the adapter to the WT32-ETH01 board:
+  - **UART TX** (adapter) → **RX** (top right of WT32-ETH01)
+  - **UART RX** (adapter) → **TX** (top right of WT32-ETH01)
+- **Short IO0 to GND** before powering on the board to enter bootloader mode.
+- **Remove jumpers for RX and TX** on the main board (disconnects the LGT8F328P controller during flashing).
+
+#### 3. Upload the Firmware (VS Code PlatformIO Extension)
+
+1. Power on the board with IO0 still shorted to GND.
+2. In the PlatformIO sidebar:
+   - Click "Project Tasks" > "env:wt32-eth01" > "Upload" to flash the firmware to the board.
+   - If upload fails, try setting a slower upload speed in the PlatformIO settings (e.g., 115200 baud).
+3. After flashing, disconnect IO0 from GND and restore RX/TX jumpers to reconnect the LGT8F328P controller.
+4. If you clear the ESP32 flash before uploading, all settings are reset to defaults and the device will start in WiFi AP mode. You will need to reconnect and reconfigure WiFi/network settings again. This is useful if the WIFI setup fails (which it sometimes does).
+
+#### 4. Board Recovery and Troubleshooting
+
+- If the board does not enter bootloader mode, repeat the IO0-to-GND procedure and power cycle.
+- Ensure RX/TX jumpers are removed during flashing to avoid communication conflicts with the LGT8F328P.
+- After flashing, restore jumpers for normal operation.
+
+### OTA (Network) Firmware Uploads
+
+After the initial flash via UART, you can upload new firmware releases over the network (OTA) using PlatformIO and the device's web updater:
+
+1. In `platformio.ini`, under `[env:wt32-eth01]`, uncomment the following line:
+   ```ini
+   upload_command = curl -F firmware=@$SOURCE http://$UPLOAD_PORT/update
+   ```
+   This enables HTTP uploads to the device using its IP address as the upload port.
+2. Make sure the device is running OpenEVSE firmware and connected to your network.
+3. In the PlatformIO sidebar, set the upload port to the device's IP address (e.g., `192.168.0.146`).
+4. Use the "Upload" task in PlatformIO to send the firmware via the network.
+
+**Important:**
+- The first upload (when coming from original Kinetos firmware) must be done via UART, because the Kinetos firmware does not support OTA updates.
+- After OpenEVSE firmware is installed, OTA uploads are available.
+
 ### Kinetos power meter drivers
 
 Kinetos hardware variants ship with an external Modbus power meter connected to the ESP32 (WT32‑ETH01). This fork supports two meter drivers. Enable exactly one at build time:
