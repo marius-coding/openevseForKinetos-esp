@@ -155,6 +155,20 @@ The WiFi gateway uses an **ESP32** which communicates with the OpenEVSE controll
 - OCPP V1.6 (beta)
 - [Home Assistant Integration (beta)](https://github.com/firstof9/openevse)
 
+### Kinetos Fork Specific Workaround: Max Current Persistence
+
+Some Kinetos wallbox units (LGT8F328P-based EVSE controller) do not retain the configured "Max Current" value across a full power cycle of the EVSE module. The upstream OpenEVSE controller firmware normally persists this setting internally; however, on affected Kinetos hardware the limit may reset to a default after the EVSE board reboots while the ESP32 gateway remains powered.
+
+This fork adds a firmware-side persistence layer on the ESP32:
+
+1. When you change the "MAX CURRENT" slider in the web UI, the value is still sent immediately to the EVSE via RAPI but is also stored locally in ESP32 configuration as `stored_max_current_soft`.
+2. On every EVSE boot detection (when the serial session to the EVSE module becomes ready), the ESP32 compares the EVSE-reported configured current (`max_current_soft`) with the locally stored value.
+3. If they differ and the stored value is non-zero, the ESP32 re-sends the stored value to the EVSE module (respecting hardware min/max limits).
+
+Visible in API / diagnostics:
+- `max_current_soft` : Current value reported by the EVSE module right now.
+- `stored_max_current_soft` : The value remembered by the ESP32 that will be (re)applied after a cold EVSE restart.
+
 ## Requirements
 
 ### OpenEVSE / EmonEVSE charging station

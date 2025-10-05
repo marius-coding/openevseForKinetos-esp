@@ -311,6 +311,17 @@ void EvseMonitor::updateCurrentSettings(long min_current, long max_hardware_curr
   _max_hardware_current = max_hardware_current;
   _pilot = pilot;
   _max_configured_current = max_configured_current;
+
+  // Workaround: If EVSE returns a default/incorrect (often 0 or hardware max) configured current
+  // and we have a locally stored desired value (from ESP config), reapply it once here.
+  #include "app_config.h" // local include inside function scope to avoid global header churn
+  static bool reapplied_max_current_once = false;
+  if(!reapplied_max_current_once && stored_max_current_soft > 0 && _max_configured_current != (long)stored_max_current_soft) {
+    DBUGF("Reapplying stored max current (boot sync) %lu instead of EVSE reported %ld", (unsigned long)stored_max_current_soft, _max_configured_current);
+    reapplied_max_current_once = true;
+    // Call internal setter (will clamp & send RAPI). This will trigger settings changed event.
+    setMaxConfiguredCurrent(stored_max_current_soft);
+  }
 }
 
 unsigned long EvseMonitor::loop(MicroTasks::WakeReason reason)

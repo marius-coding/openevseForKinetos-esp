@@ -125,6 +125,10 @@ uint8_t led_brightness;
 String rfid_storage;
 
 long max_current_soft;
+// Persisted copy of the desired soft max current (workaround when EVSE module
+// does not retain the configured current across power cycles). This value will
+// be (re)applied to the EVSE on boot if it differs from the module value.
+uint32_t stored_max_current_soft; // 0 == unset
 
 // Scheduler settings
 uint32_t scheduler_start_window;
@@ -232,6 +236,10 @@ ConfigOpt *opts[] =
 
 // Scheduler options
   new ConfigOptDefinition<uint32_t>(scheduler_start_window, SCHEDULER_DEFAULT_START_WINDOW, "scheduler_start_window", "ssw"),
+
+// Workaround stored max current (soft). Not natively persisted by EVSE module
+// so we keep a local copy which will be resent on boot.
+  new ConfigOptDefinition<uint32_t>(stored_max_current_soft, 0, "stored_max_current_soft", "smcs"),
 
 // Flags
   &flagsOpt,
@@ -509,6 +517,8 @@ bool config_deserialize(DynamicJsonDocument &doc)
       evse.setMaxConfiguredCurrent(current);
       config_modified = true;
       DBUGLN("max_current_soft changed");
+      // Persist desired value locally so it can be reapplied on next boot
+      config_set("stored_max_current_soft", (uint32_t)current);
     }
   }
 
@@ -575,7 +585,15 @@ bool config_serialize(DynamicJsonDocument &doc, bool longNames, bool compactOutp
     doc["relay_check"] = evse.isStuckRelayCheckEnabled();
     doc["vent_check"] = evse.isVentRequiredEnabled();
     doc["temp_check"] = evse.isTemperatureCheckEnabled();
-    doc["max_current_soft"] = evse.getMaxConfiguredCurrent();
+    long reported_max = evse.getMaxConfiguredCurrent();
+    // Fallback: if EVSE returns 0 (some Kinetos boards on cold boot) but we have a stored value, surface stored value so UI does not show 0A.
+    if(reported_max == 0 && stored_max_current_soft > 0) {
+      reported_max = stored_max_current_soft;
+    }
+    doc["max_current_soft"] = reported_max;
+    // Expose persisted desired value (may differ immediately after cold boot
+    // until reapply logic runs)
+    doc["stored_max_current_soft"] = stored_max_current_soft;
     // OpenEVSE Read only information
     doc["service"] = static_cast<uint8_t>(evse.getServiceLevel());
     doc["scale"] = evse.getCurrentSensorScale();

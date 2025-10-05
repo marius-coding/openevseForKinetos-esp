@@ -87,6 +87,9 @@ extern uint32_t divert_min_charge_time;
 // Scheduler settings
 extern uint32_t scheduler_start_window;
 
+// Workaround: locally persisted soft max current to reapply on EVSE boot
+extern uint32_t stored_max_current_soft;
+
 //Shaper settings
 extern uint32_t current_shaper_max_pwr;
 extern uint32_t current_shaper_smoothing_time;
