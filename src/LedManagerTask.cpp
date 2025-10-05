@@ -122,47 +122,49 @@ uint8_t buttonShareState = 0;
 
 static uint32_t status_colour_map(u_int8_t lcdcol)
 {
-  u_int32_t color;
+  // Updated to a friendlier CSS-inspired palette with comments containing #RRGGBB
+  // so VS Code shows color swatches.
+  u_int32_t color = 0xFFFFFF; // Default fallback -> White #FFFFFF
   switch (lcdcol)
   {
   case OPENEVSE_LCD_OFF:
-    color = 0x000000; // BLACK
+    color = 0x000000; // Off (Black) #000000
     break;
   case OPENEVSE_LCD_RED:
-    color = 0xFF0000;  // RED
+    color = 0xFF6347; // Tomato #FF6347 (was Red #FF0000)
     break;
   case OPENEVSE_LCD_GREEN:
-    color = 0x00FF00; // GREEN
+    color = 0x32CD32; // LimeGreen #32CD32 (was Green #00FF00)
     break;
   case OPENEVSE_LCD_YELLOW:
-    color = 0xFFFF00; // YELLOW
+    color = 0xFFD700; // Gold #FFD700 (was Yellow #FFFF00)
     break;
   case OPENEVSE_LCD_BLUE:
-    color = 0x0000FF; // BLUE
+    color = 0x1E90FF; // DodgerBlue #1E90FF (was Blue #0000FF)
     break;
   case OPENEVSE_LCD_VIOLET:
-    color = 0xFF00FF; // VIOLET
+    color = 0xBA55D3; // MediumOrchid #BA55D3 (was Violet #FF00FF)
     break;
   case OPENEVSE_LCD_TEAL:
-    color = 0x00FFFF; // TEAL
+    color = 0x48D1CC; // MediumTurquoise #48D1CC (was Teal #00FFFF)
     break;
   case OPENEVSE_LCD_WHITE:
-    color = 0xFFFFFF; // WHITE
+    color = 0xFFFFFF; // White #FFFFFF
     break;
   }
-  return color; // WHITE
+  return color;
 }
 #else
 static uint32_t status_colour_map[] =
 {
-  rgb(0, 0, 0),       // OPENEVSE_LCD_OFF
-  rgb(255, 0, 0),     // OPENEVSE_LCD_RED
-  rgb(0, 255, 0),     // OPENEVSE_LCD_GREEN
-  rgb(255, 255, 0),   // OPENEVSE_LCD_YELLOW
-  rgb(0, 0, 255),     // OPENEVSE_LCD_BLUE
-  rgb(255, 0, 255),   // OPENEVSE_LCD_VIOLET
-  rgb(0, 255, 255),   // OPENEVSE_LCD_TEAL
-  rgb(255, 255, 255), // OPENEVSE_LCD_WHITE
+  rgb(0, 0, 0),         // OPENEVSE_LCD_OFF  Black #000000
+  rgb(255, 99, 71),     // OPENEVSE_LCD_RED  Tomato #FF6347 (was 255,0,0)
+  rgb(50, 205, 50),     // OPENEVSE_LCD_GREEN LimeGreen #32CD32 (was 0,255,0)
+  rgb(255, 215, 0),     // OPENEVSE_LCD_YELLOW Gold #FFD700 (was 255,255,0)
+  rgb(30, 144, 255),    // OPENEVSE_LCD_BLUE DodgerBlue #1E90FF (was 0,0,255)
+  rgb(186, 85, 211),    // OPENEVSE_LCD_VIOLET MediumOrchid #BA55D3 (was 255,0,255)
+  rgb(72, 209, 204),    // OPENEVSE_LCD_TEAL MediumTurquoise #48D1CC (was 0,255,255)
+  rgb(255, 255, 255),   // OPENEVSE_LCD_WHITE White #FFFFFF
 };
 #endif
 #endif

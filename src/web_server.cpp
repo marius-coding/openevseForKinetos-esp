@@ -514,10 +514,18 @@ handleStatus(MongooseHttpServerRequest *request)
 
   if(HTTP_GET == request->method()) {
 
-    const size_t capacity = JSON_OBJECT_SIZE(128) + 2048;
+    // Increased capacity: previous size (JSON_OBJECT_SIZE(128)+2048) was insufficient and
+    // resulted in truncated JSON (frontend then fails to parse and shows connection error).
+    // If this still overflows, ArduinoJSON will silently truncate; we log sizes for diagnosis.
+    const size_t capacity = JSON_OBJECT_SIZE(160) + 4096; // headroom for new fields
     DynamicJsonDocument doc(capacity);
     buildStatus(doc);
     response->setCode(200);
+    // Diagnostic: measure produced JSON length before sending (only if debug enabled)
+    #ifdef ENABLE_DEBUG
+      size_t json_len = measureJson(doc);
+      DBUGF("/status json_len=%u cap=%u free_heap=%u", (unsigned)json_len, (unsigned)capacity, (unsigned)ESP.getFreeHeap());
+    #endif
     serializeJson(doc, *response);
 
   } else if(HTTP_POST == request->method()) {
