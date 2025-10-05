@@ -30,6 +30,14 @@
 #include "emonesp.h"
 #include "LedManagerTask.h"
 
+// (Optional) define LED_TRACE for verbose tracing
+//#define LED_TRACE
+#ifdef LED_TRACE
+#define LEDTRACE(...) DBUGF(__VA_ARGS__)
+#else
+#define LEDTRACE(...)
+#endif
+
 #if defined(NEO_PIXEL_PIN) && defined(NEO_PIXEL_LENGTH) && !defined(ENABLE_WS2812FX)
 #include <Adafruit_NeoPixel.h>
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NEO_PIXEL_LENGTH, NEO_PIXEL_PIN, NEO_GRB + NEO_KHZ800);
@@ -37,16 +45,14 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(NEO_PIXEL_LENGTH, NEO_PIXEL_PIN, NEO
 #include <WS2812FX.h>
 WS2812FX ws2812fx = WS2812FX(NEO_PIXEL_LENGTH, NEO_PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
-class LedAnimatorTask : public MicroTasks::Task
-{
-  public:
-    void setup() {
-    }
-    unsigned long loop(MicroTasks::WakeReason reason) {
-      ws2812fx.service();
-      return 10;
-    }
-} animator;
+// FreeRTOS task pinned to core 1 to service WS2812FX independent of MicroTasks scheduling
+static TaskHandle_t ledServiceHandle = nullptr;
+static void ledServiceTask(void *arg) {
+  for(;;) {
+    ws2812fx.service();
+    vTaskDelay(pdMS_TO_TICKS(5)); // ~200 Hz service (adjust if needed)
+  }
+}
 #endif
 
 #define FADE_STEP         16
@@ -199,7 +205,12 @@ void LedManagerTask::setup()
   DBUGF("Brightness: %d ", brightness);
 
   ws2812fx.start();
-  MicroTask.startTask(&animator);
+  if(ledServiceHandle == nullptr) {
+    BaseType_t ok = xTaskCreatePinnedToCore(ledServiceTask, "LEDfx", 2048, nullptr, 2, &ledServiceHandle, 1);
+    if(ok != pdPASS) {
+      DBUGF("Failed to create LED service task");
+    }
+  }
 #endif
 
 #if defined(RED_LED) && defined(GREEN_LED) && defined(BLUE_LED)
@@ -227,22 +238,7 @@ void LedManagerTask::setup()
 
 unsigned long LedManagerTask::loop(MicroTasks::WakeReason reason)
 {
-  DBUG("LED manager woke: ");
-  DBUG(WakeReason_Scheduled == reason ? "WakeReason_Scheduled" :
-       WakeReason_Event == reason ? "WakeReason_Event" :
-       WakeReason_Message == reason ? "WakeReason_Message" :
-       WakeReason_Manual == reason ? "WakeReason_Manual" :
-       "UNKNOWN");
-  DBUG(" ");
-  DBUGLN(LedState_Off == state ? "LedState_Off" :
-         LedState_Test_Red == state ? "LedState_Test_Red" :
-         LedState_Test_Green == state ? "LedState_Test_Green" :
-         LedState_Test_Blue == state ? "LedState_Test_Blue" :
-         LedState_Evse_State == state ? "LedState_Evse_State" :
-         LedState_WiFi_Access_Point_Waiting == state ? "LedState_WiFi_Access_Point_Waiting" :
-         LedState_WiFi_Access_Point_Connected == state ? "LedState_WiFi_Access_Point_Connected" :
-         LedState_WiFi_Client_Connected == state ? "LedState_WiFi_Client_Connected" :
-         "UNKNOWN");
+  LEDTRACE("LED manager woke (%lu) state=%d", (unsigned long)reason, (int)state);
 
   if(onStateChange.IsTriggered()) {
     setNewState(false);
@@ -284,17 +280,16 @@ unsigned long LedManagerTask::loop(MicroTasks::WakeReason reason)
     case LedState_WiFi_Client_Connected:
     {
       uint8_t lcdCol = _evse->getStateColour();
-      DBUGVAR(lcdCol);
       uint32_t col = status_colour_map(lcdCol);
-      DBUGVAR(col, HEX);
-      //DBUGF("Color: %x\n", col);
-      bool isCharging, isError;
+      bool isCharging = _evse->isCharging();
+      bool isError = _evse->isError();
       u_int16_t speed;
-      speed = 2000 - ((_evse->getChargeCurrent()/_evse->getMaxHardwareCurrent())*1000);
-      DBUGF("Speed: %d ",speed);
-      DBUGF("Amps: %d ", _evse->getAmps());
-      DBUGF("ChargeCurrent: %d ", _evse->getChargeCurrent());
-      DBUGF("MaxHWCurrent: %d ", _evse->getMaxHardwareCurrent());
+      // Original speed formula (guard denom)
+      if(_evse->getMaxHardwareCurrent() == 0) {
+        speed = DEFAULT_FX_SPEED;
+      } else {
+        speed = 2000 - ((_evse->getChargeCurrent()/_evse->getMaxHardwareCurrent())*1000);
+      }
       if (this->brightness == 0){
         ws2812fx.setBrightness(255);
       }
@@ -304,38 +299,31 @@ unsigned long LedManagerTask::loop(MicroTasks::WakeReason reason)
       switch(state)
       {
         case LedState_Evse_State:
-          isCharging = _evse->isCharging();
-          isError = _evse->isError();
           if(isCharging){
             setAllRGB(col, FX_MODE_COLOR_WIPE, speed);
           } else if(isError){
             setAllRGB(col, FX_MODE_FADE, DEFAULT_FX_SPEED);
           } else {
             setAllRGB(col, FX_MODE_STATIC, DEFAULT_FX_SPEED);
-          }    
-          //DBUGF("MODE:  LedState_Evse_State\n");
+          }
           return MicroTask.Infinate;
 
         case LedState_WiFi_Access_Point_Waiting:
           setEvseAndWifiRGB(col, FX_MODE_BLINK, CONNECTING_FX_SPEED);
-          //DBUGF("MODE: LedState_WiFi_Access_Point_Waiting\n");
           return CONNECTING_FLASH_TIME;
 
         case LedState_WiFi_Access_Point_Connected:
           setEvseAndWifiRGB(col, FX_MODE_FADE, CONNECTED_FX_SPEED);
           flashState = !flashState;
-          //DBUGF("MODE: LedState_WiFi_Access_Point_Connected\n");
           return CONNECTED_FLASH_TIME;
 
         case LedState_WiFi_Client_Connecting:
           setEvseAndWifiRGB(col, FX_MODE_FADE, CONNECTING_FX_SPEED);
           flashState = !flashState;
-          //DBUGF("MODE: LedState_WiFi_Client_Connecting\n");
           return CONNECTING_FLASH_TIME;
 
         case LedState_WiFi_Client_Connected:
           setEvseAndWifiRGB(col, FX_MODE_FADE, CONNECTED_FX_SPEED);
-          //DBUGF("MODOE: LedState_WiFi_Client_Connected\n");
           return MicroTask.Infinate;
 
         default:
@@ -515,16 +503,8 @@ void LedManagerTask::setAllRGB(uint32_t color, u_int8_t mode, uint16_t speed)
 
 void LedManagerTask::setEvseAndWifiRGB(uint32_t evseColor, u_int8_t mode, u_int16_t speed)
 {
-  DBUG("EVSE LED COLOR:");
-  DBUG(evseColor);
-  if(evseColor != ws2812fx.getColor()){
-    ws2812fx.setColor(evseColor);
-  }
-
-  if(speed != ws2812fx.getSpeed()){
-    ws2812fx.setSpeed(speed);
-  }
-
+  ws2812fx.setColor(evseColor);
+  ws2812fx.setSpeed(speed);
   if (ws2812fx.getMode() != mode){
     ws2812fx.setMode(mode);
   }

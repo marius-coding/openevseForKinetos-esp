@@ -15,7 +15,7 @@ Always reference these instructions first and fallback to search or bash command
 
 ### Build and test the repository:
 - `pip install --upgrade platformio` -- install PlatformIO build system
-- `pio run -e openevse_wifi_v1` -- build default environment. **NEVER CANCEL**. First build takes 15-45 minutes (downloads ESP32 toolchain ~500MB). Set timeout to 60+ minutes.
+- `pio run -e wt32-eth01` -- build default environment. **NEVER CANCEL**. First build takes 15-45 minutes (downloads ESP32 toolchain ~500MB). Set timeout to 60+ minutes.
 - **Common Build Failure**: "HTTPClientError" indicates network restrictions blocking PlatformIO registry (api.registry.platformio.org)
 - Alternative boards: `pio run -e adafruit_huzzah32`, `pio run -e nodemcu-32s`, `pio run -e olimex_esp32-gateway-e`
 - **Full CI Build**: Tests 15+ board configurations, takes ~60+ minutes total
