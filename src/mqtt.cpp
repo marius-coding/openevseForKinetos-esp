@@ -13,6 +13,7 @@
 #include "manual.h"
 #include "scheduler.h"
 #include "current_shaper.h"
+#include "lcd.h"
 
 Mqtt mqtt(evse); // global instance
 
@@ -228,6 +229,10 @@ void Mqtt::subscribeTopics() {
   _mqttclient.subscribe(mqtt_topic + "/limit/set"); yield();
   _mqttclient.subscribe(mqtt_topic + "/config/set"); yield();
   _mqttclient.subscribe(mqtt_topic + "/restart"); yield();
+  // Display control
+  _mqttclient.subscribe(mqtt_topic + "/pause_display_update"); yield();
+  _mqttclient.subscribe(mqtt_topic + "/resume_display_update"); yield();
+  _mqttclient.subscribe(mqtt_topic + "/set_display_text"); yield();
 
   DBUGLN("MQTT Subscriptions complete");
 }
@@ -385,13 +390,38 @@ void Mqtt::handleMqttMessage(MongooseString topic, MongooseString payload) {
     }
   }
   else if (topic_string == mqtt_topic + "/restart") {
-    // This logic can reuse the existing mqtt_restart_device logic by making it a static helper or part of this class
+    // Payload: {"device":"gateway"} or {"device":"evse"}
     const size_t capacity = JSON_OBJECT_SIZE(1) + 16;
     DynamicJsonDocument doc(capacity);
     DeserializationError error = deserializeJson(doc, payload_str);
     if(!error && doc.containsKey("device")){
         if (strcmp(doc["device"], "gateway") == 0 ) restart_system();
         else if (strcmp(doc["device"], "evse") == 0) _evse->restartEvse();
+    }
+  }
+  else if (topic_string == mqtt_topic + "/pause_display_update") {
+    int line = payload_str.toInt();
+    lcd.pauseLine(line);
+  }
+  else if (topic_string == mqtt_topic + "/resume_display_update") {
+    int line = payload_str.toInt();
+    lcd.resumeLine(line);
+  }
+  else if (topic_string == mqtt_topic + "/set_display_text") {
+    // Expect payload format: {"line":0,"text":"Hello"} or just raw text for line 0
+    if(payload_str.startsWith("{")) {
+      DynamicJsonDocument doc(128);
+      DeserializationError err = deserializeJson(doc, payload_str);
+      if(!err) {
+        int line = doc["line"] | 0;
+        const char *text = doc["text"] | "";
+        lcd.pauseLine(line);
+        lcd.setExternalText(line, text);
+      }
+    } else {
+      // default line 0
+      lcd.pauseLine(0);
+      lcd.setExternalText(0, payload_str.c_str());
     }
   }
   else { // RAPI commands

@@ -107,6 +107,77 @@ Driver selection and behavior
 Hardware notes
 - Default serial for the external meter is UART2 (ESP32 Serial2) at 9600 baud, 8N2 framing. An optional RS485 DE/RE control pin can be configured in the drivers if your transceiver requires it.
 
+
+---
+
+## Display Control (HTTP & MQTT)
+
+This fork adds lightweight per-line control of the (classic 2-line) LCD so external systems can inject custom text without it being immediately overwritten by the firmware's automatic status updates.
+
+Currently supported ONLY on the classic character LCD path (non-TFT). TFT screens will ignore these controls (future enhancement possible).
+
+### Concepts
+
+- The LCD has 2 logical lines: `0` (top) and `1` (bottom).
+- You can pause automatic firmware updates for either line; while paused, the firmware will not overwrite that line with status / info cycling.
+- Even when paused you can still set text via HTTP or MQTT; pause only blocks automatic internal updates.
+- Pause state and custom text are **not persisted** across reboot / power cycle.
+- Setting Display text via MQTT/HTTP automatically pauses the line. There is no need to call the pause function manually
+
+### HTTP Endpoints
+
+All endpoints are simple GET requests (authentication still applies if configured):
+
+| Purpose | Endpoint | Params | Notes |
+|---------|----------|--------|-------|
+| Pause automatic updates for a line | `/pause_display_update` | `line` (0 or 1) | Safe to call repeatedly |
+| Resume automatic updates for a line | `/resume_display_update` | `line` (0 or 1) | Triggers a refresh soon after |
+| Set text on a line | `/set_display_text` | `line` (0 or 1), `text` (URL-encoded) | Works even if line is paused |
+
+Examples:
+
+```
+GET /pause_display_update?line=0
+GET /set_display_text?line=0&text=Charging%20Soon
+GET /resume_display_update?line=0
+GET /set_display_text?line=1&text=Solar%20>3kW
+```
+
+### MQTT Topics
+
+Assuming base topic `mqtt_topic` (configured in settings):
+
+| Purpose | Topic | Payload |
+|---------|-------|---------|
+| Pause line | `<mqtt_topic>/pause_display_update` | Line number (`0` or `1`) |
+| Resume line | `<mqtt_topic>/resume_display_update` | Line number (`0` or `1`) |
+| Set text (simple) | `<mqtt_topic>/set_display_text` | Raw text (applies to line `0`) |
+| Set text (explicit line) | `<mqtt_topic>/set_display_text` | JSON: `{"line":1,"text":"Hello"}` |
+
+Examples (mosquitto_pub style):
+
+```
+mosquitto_pub -t openevse/pause_display_update -m 0
+mosquitto_pub -t openevse/set_display_text -m "EV Ready"
+mosquitto_pub -t openevse/set_display_text -m '{"line":1,"text":"Solar 2.4kW"}'
+mosquitto_pub -t openevse/resume_display_update -m 0
+```
+
+### Behavior Details & Limitations
+
+- Line index outside 0–1 is ignored.
+- Setting text always clears the remainder of the line (pads with spaces internally) respecting the device's 16-char width.
+- After `resume`, the next normal UI cycle will refresh that line (state or info text) on its regular schedule.
+- No retention: after a reboot the firmware resumes normal automatic updates.
+- TFT support: not yet; the TFT rendering stack is separate and would need parallel hooks.
+
+### Use Cases
+
+- Temporarily show a custom status (e.g., upstream energy management decision) without losing the charging metrics on the other line.
+- Integrate with automation platforms that publish dynamic human-readable hints.
+
+If you need: persistence across reboots, TFT support, or more than two queued custom messages, open an issue with details.
+
 ---
 
 # OpenEVSE

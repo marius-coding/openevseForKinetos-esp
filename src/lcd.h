@@ -155,6 +155,15 @@ class LcdTask : public MicroTasks::Task
     void display(const __FlashStringHelper *msg, int x, int y, int time, uint32_t flags);
     void display(String &msg, int x, int y, int time, uint32_t flags);
     void display(const char *msg, int x, int y, int time, uint32_t flags);
+    // Control automatic updates for individual lines (0 or 1). When paused the
+    // internal status logic will not overwrite that line; external calls via
+    // display()/showText (HTTP/MQTT) will still succeed.
+    void pauseLine(uint8_t line);
+    void resumeLine(uint8_t line);
+    bool isLinePaused(uint8_t line) const;
+    // Directly set text for a line while respecting max length. This will
+    // clear the rest of the line. Provided for HTTP/MQTT helpers.
+    void setExternalText(uint8_t line, const char *text);
     
     void setWifiMode(bool client, bool connected);
 };

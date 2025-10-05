@@ -58,6 +58,34 @@ LcdTask::LcdTask() :
 {
 }
 
+// Track pause status per line (only 2 lines on classic LCD). Default false.
+static bool _linePausedState[2] = { false, false };
+
+void LcdTask::pauseLine(uint8_t line) {
+  if(line < 2) {
+    _linePausedState[line] = true;
+  }
+}
+
+void LcdTask::resumeLine(uint8_t line) {
+  if(line < 2) {
+    _linePausedState[line] = false;
+    // Force redraw soon after resume
+    _updateStateDisplay = true;
+    _updateInfoLine = true;
+  }
+}
+
+bool LcdTask::isLinePaused(uint8_t line) const {
+  return (line < 2) ? _linePausedState[line] : false;
+}
+
+void LcdTask::setExternalText(uint8_t line, const char *text) {
+  if(line < 2 && text) {
+    showText(0, line, text, true);
+  }
+}
+
 void LcdTask::display(Message *msg, uint32_t flags)
 {
   if(flags & LCD_DISPLAY_NOW)
@@ -253,11 +281,15 @@ unsigned long LcdTask::loop(MicroTasks::WakeReason reason)
   }
 
   if(_updateStateDisplay) {
-    displayStateLine(_evseState, nextUpdate);
+    if(!isLinePaused(0)) {
+      displayStateLine(_evseState, nextUpdate);
+    }
   }
 
   if(_updateInfoLine) {
-    displayInfoLine(_infoLine, nextUpdate);
+    if(!isLinePaused(1)) {
+      displayInfoLine(_infoLine, nextUpdate);
+    }
   }
 
   unsigned long nextInfoDelay = _infoLineChageTime - millis();
@@ -411,90 +443,90 @@ void LcdTask::displayStateLine(uint8_t evseState, unsigned long &nextUpdate)
   {
     case OPENEVSE_STATE_NOT_CONNECTED:
       // Line 0 "Ready L2:48A"
-      displayNumberValue(0, "Ready", _evse->getChargeCurrent(), 0, "A");
+      if(!isLinePaused(0)) displayNumberValue(0, "Ready", _evse->getChargeCurrent(), 0, "A");
       _updateStateDisplay = false;
       break;
 
     case OPENEVSE_STATE_CONNECTED:
       // Line 0 "Connected L2:48A"
-      displayNumberValue(0, "Connected", _evse->getChargeCurrent(), 0, "A");
+      if(!isLinePaused(0)) displayNumberValue(0, "Connected", _evse->getChargeCurrent(), 0, "A");
       _updateStateDisplay = false;
       break;
 
     case OPENEVSE_STATE_CHARGING:
       // Line 0 "Charging 47.8A"
-      displayNumberValue(0, "Charging", _evse->getAmps(), 2, "A");
+      if(!isLinePaused(0)) displayNumberValue(0, "Charging", _evse->getAmps(), 2, "A");
       nextUpdate = 1000;
       break;
 
     case OPENEVSE_STATE_VENT_REQUIRED:
       // Line 0 "VEHICLE ERROR "
       // Line 1 "VENT REQUIRED "
-      showText(0, 0, "VEHICLE ERROR", true);
-      showText(0, 1, "VENT REQUIRED", true);
+      if(!isLinePaused(0)) showText(0, 0, "VEHICLE ERROR", true);
+      if(!isLinePaused(1)) showText(0, 1, "VENT REQUIRED", true);
       _updateStateDisplay = false;
       break;
 
     case OPENEVSE_STATE_DIODE_CHECK_FAILED:
       // Line 0 "VEHICLE ERROR "
       // Line 1 "VEHICLE CHECK "
-      showText(0, 0, "VEHICLE ERROR", true);
-      showText(0, 1, "VEHICLE CHECK", true);
+      if(!isLinePaused(0)) showText(0, 0, "VEHICLE ERROR", true);
+      if(!isLinePaused(1)) showText(0, 1, "VEHICLE CHECK", true);
       _updateStateDisplay = false;
       break;
 
     case OPENEVSE_STATE_GFI_FAULT:
       // Line 0 "SAFETY ERROR "
       // Line 1 "GROUND FAULT "
-      showText(0, 0, "SAFETY ERROR", true);
-      showText(0, 1, "GROUND FAULT", true);
+      if(!isLinePaused(0)) showText(0, 0, "SAFETY ERROR", true);
+      if(!isLinePaused(1)) showText(0, 1, "GROUND FAULT", true);
       _updateStateDisplay = false;
       break;
 
     case OPENEVSE_STATE_NO_EARTH_GROUND:
       // Line 0 "SAFETY ERROR "
       // Line 1 "GROUND MISSING "
-      showText(0, 0, "SAFETY ERROR", true);
-      showText(0, 1, "GROUND MISSING", true);
+      if(!isLinePaused(0)) showText(0, 0, "SAFETY ERROR", true);
+      if(!isLinePaused(1)) showText(0, 1, "GROUND MISSING", true);
       _updateStateDisplay = false;
       break;
 
     case OPENEVSE_STATE_STUCK_RELAY:
       // Line 0 "SAFETY ERROR "
       // Line 1 "STUCK RELAY "
-      showText(0, 0, "SAFETY ERROR", true);
-      showText(0, 1, "STUCK RELAY", true);
+      if(!isLinePaused(0)) showText(0, 0, "SAFETY ERROR", true);
+      if(!isLinePaused(1)) showText(0, 1, "STUCK RELAY", true);
       _updateStateDisplay = false;
       break;
 
     case OPENEVSE_STATE_GFI_SELF_TEST_FAILED:
       // Line 0 "SAFETY ERROR "
       // Line 1 "SELF TEST FAILED"
-      showText(0, 0, "SAFETY ERROR", true);
-      showText(0, 1, "SELF TEST FAILE", true);
+      if(!isLinePaused(0)) showText(0, 0, "SAFETY ERROR", true);
+      if(!isLinePaused(1)) showText(0, 1, "SELF TEST FAILE", true);
       _updateStateDisplay = false;
       break;
 
     case OPENEVSE_STATE_OVER_TEMPERATURE:
       // Line 0 "SAFETY ERROR "
       // Line 1 "OVER TEMPERATURE"
-      showText(0, 0, "SAFETY ERROR", true);
-      showText(0, 1, "OVER TEMPERATUR", true);
+      if(!isLinePaused(0)) showText(0, 0, "SAFETY ERROR", true);
+      if(!isLinePaused(1)) showText(0, 1, "OVER TEMPERATUR", true);
       _updateStateDisplay = false;
       break;
 
     case OPENEVSE_STATE_OVER_CURRENT:
       // Line 0 "SAFETY ERROR "
       // Line 1 "OVER CURRENT "
-      showText(0, 0, "SAFETY ERROR", true);
-      showText(0, 1, "OVER CURRENT", true);
+      if(!isLinePaused(0)) showText(0, 0, "SAFETY ERROR", true);
+      if(!isLinePaused(1)) showText(0, 1, "OVER CURRENT", true);
       _updateStateDisplay = false;
       break;
 
     case OPENEVSE_STATE_SLEEPING:
     case OPENEVSE_STATE_DISABLED:
       // Line 0 "zzZ Sleeping Zzz"
-      showText(0, 0, "zzZ Sleeping Zzz", true);
+      if(!isLinePaused(0)) showText(0, 0, "zzZ Sleeping Zzz", true);
       _updateStateDisplay = false;
       break;
 

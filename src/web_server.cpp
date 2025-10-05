@@ -142,6 +142,55 @@ void dumpRequest(MongooseHttpServerRequest *request)
 }
 
 // -------------------------------------------------------------------
+// Pause automatic display updates for a specific line
+// url: /pause_display_update?line=0
+// -------------------------------------------------------------------
+void handlePauseDisplayUpdate(MongooseHttpServerRequest *request) {
+  MongooseHttpServerResponseStream *response;  
+  if(false == requestPreProcess(request, response, CONTENT_TYPE_TEXT)) { return; }
+  int line = request->getParam("line").toInt();
+  lcd.pauseLine(line);
+  response->setCode(200);
+  response->print("paused");
+  request->send(response);
+}
+
+// -------------------------------------------------------------------
+// Resume automatic display updates for a specific line
+// url: /resume_display_update?line=0
+// -------------------------------------------------------------------
+void handleResumeDisplayUpdate(MongooseHttpServerRequest *request) {
+  MongooseHttpServerResponseStream *response;  
+  if(false == requestPreProcess(request, response, CONTENT_TYPE_TEXT)) { return; }
+  int line = request->getParam("line").toInt();
+  lcd.resumeLine(line);
+  response->setCode(200);
+  response->print("resumed");
+  request->send(response);
+}
+
+// -------------------------------------------------------------------
+// Set display text for a line (even if paused)
+// url: /set_display_text?line=0&text=Hello%20World
+// -------------------------------------------------------------------
+void handleSetDisplayText(MongooseHttpServerRequest *request) {
+  MongooseHttpServerResponseStream *response;  
+  if(false == requestPreProcess(request, response, CONTENT_TYPE_TEXT)) { return; }
+  int line = request->getParam("line").toInt();
+  char text[32];
+  if(request->getParam("text", text, sizeof(text)) >= 0) {
+    lcd.pauseLine(line);
+    lcd.setExternalText(line, text);
+    response->setCode(200);
+    response->print("ok");
+  } else {
+    response->setCode(400);
+    response->print("missing text");
+  }
+  request->send(response);
+}
+
+// -------------------------------------------------------------------
 // Helper function to perform the standard operations on a request
 // -------------------------------------------------------------------
 bool requestPreProcess(MongooseHttpServerRequest *request, MongooseHttpServerResponseStream *&response, fstr_t contentType)
@@ -1222,6 +1271,9 @@ void web_server_setup()
   server.on("/scan$", handleScan);
   server.on("/apoff$", handleAPOff);
   server.on("/divertmode$", handleDivertMode);
+  server.on("/pause_display_update$", handlePauseDisplayUpdate);
+  server.on("/resume_display_update$", handleResumeDisplayUpdate);
+  server.on("/set_display_text$", handleSetDisplayText);
   server.on("/shaper$", handleCurrentShaper);
   server.on("/emoncms/describe$", handleDescribe);
   server.on("/rfid/add$", handleAddRFID);
