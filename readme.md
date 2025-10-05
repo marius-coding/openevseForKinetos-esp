@@ -176,8 +176,6 @@ mosquitto_pub -t openevse/resume_display_update -m 0
 - Temporarily show a custom status (e.g., upstream energy management decision) without losing the charging metrics on the other line.
 - Integrate with automation platforms that publish dynamic human-readable hints.
 
-If you need: persistence across reboots, TFT support, or more than two queued custom messages, open an issue with details.
-
 ---
 
 # OpenEVSE

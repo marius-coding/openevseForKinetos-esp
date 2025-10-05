@@ -577,7 +577,25 @@ bool config_serialize(DynamicJsonDocument &doc, bool longNames, bool compactOutp
   if(config_ver > 0) {
     // Read only information
     doc["firmware"] = evse.getFirmwareVersion();
-    doc["evse_serial"] = evse.getSerial();
+    // Sanitize EVSE serial: some boards return binary/control bytes which break JSON parsers.
+    {
+      const char *raw = evse.getSerial();
+      String safe;
+      if(raw) {
+        for(size_t i = 0; i < 16 && raw[i] != '\0'; i++) {
+          unsigned char c = (unsigned char)raw[i];
+          // Accept visible ASCII [32..126]; hex-encode everything else (including DEL or extended / control)
+            if(c >= 32 && c <= 126) {
+              safe += (char)c;
+            } else {
+              char buf[3];
+              snprintf(buf, sizeof(buf), "%02X", c);
+              safe += buf; // e.g. 0x01 -> "01", 0xBC -> "BC"
+            }
+        }
+      }
+      doc["evse_serial"] = safe;
+    }
     // OpenEVSE module config
     doc["diode_check"] = evse.isDiodeCheckEnabled();
     doc["gfci_check"] = evse.isGfiTestEnabled();
