@@ -12,6 +12,7 @@ typedef const __FlashStringHelper *fstr_t;
 #include "espal.h"
 #include "input.h"
 #include "event.h"
+#include "LedManagerTask.h"
 
 extern bool isPositive(MongooseHttpServerRequest *request, const char *param);
 extern bool web_server_config_deserialise(DynamicJsonDocument &doc, bool factory);
@@ -94,6 +95,15 @@ bool web_server_config_deserialise(DynamicJsonDocument &doc, bool factory)
   {
     config_commit(factory);
     DBUGLN("Config updated");
+    
+    // Check if any LED color was updated and refresh LED state
+    for(JsonPair kv : doc.as<JsonObject>()) {
+      if(String(kv.key().c_str()).startsWith("led_color_")) {
+        DBUGLN("LED color config changed, updating LED manager");
+        ledManager.updateColors();
+        break;
+      }
+    }
   }
 
   return config_modified;

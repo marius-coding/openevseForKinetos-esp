@@ -43,6 +43,7 @@ typedef const __FlashStringHelper *fstr_t;
 #include "current_shaper.h"
 #include "evse_man.h"
 #include "limit.h"
+#include "LedManagerTask.h"
 
 MongooseHttpServer server;          // Create class for Web server
 MongooseHttpServer redirect;        // Server to redirect to HTTPS if enabled
@@ -994,6 +995,48 @@ handleRestart(MongooseHttpServerRequest *request) {
 }
 
 // -------------------------------------------------------------------
+// Test LED color
+// url: /testled
+// POST body: {"color": 16711680} (decimal RGB value)
+// -------------------------------------------------------------------
+void
+handleTestLed(MongooseHttpServerRequest *request) {
+  MongooseHttpServerResponseStream *response;
+  if(false == requestPreProcess(request, response, CONTENT_TYPE_JSON)) {
+    return;
+  }
+
+  if (HTTP_POST == request->method()) {
+    String body = request->body().toString();
+    const size_t capacity = JSON_OBJECT_SIZE(1) + 32;
+    DynamicJsonDocument doc(capacity);
+    DeserializationError error = deserializeJson(doc, body);
+    
+    if(!error && doc.containsKey("color")) {
+      uint32_t color = doc["color"].as<uint32_t>();
+      
+      // Validate color is within RGB range
+      if(color <= 0xFFFFFF) {
+        ledManager.testColor(color);
+        response->setCode(200);
+        response->print("{\"msg\":\"LED test started\"}");
+      } else {
+        response->setCode(400);
+        response->print("{\"msg\":\"Invalid color value\"}");
+      }
+    } else {
+      response->setCode(400);
+      response->print("{\"msg\":\"Missing color parameter\"}");
+    }
+    request->send(response);
+  } else {
+    response->setCode(405);
+    response->print("{\"msg\":\"Method not allowed\"}");
+    request->send(response);
+  }
+}
+
+// -------------------------------------------------------------------
 // Emoncms describe end point,
 // Allows local device discover using https://github.com/emoncms/find
 // url: //emoncms/describe
@@ -1259,6 +1302,8 @@ void web_server_setup()
   // Handle status updates
   server.on("/status$", handleStatus);
   server.on("/config$", handleConfig);
+  server.on("/testled$", handleTestLed);
+  server.on("/testled$", handleTestLed);
 
   // Handle HTTP web interface button presses
   server.on("/teslaveh$", handleTeslaVeh);

@@ -73,11 +73,13 @@ class LedManagerTask : public MicroTasks::Task
     void setWifiMode(bool client, bool connected);
 
     void test();
+    void testColor(uint32_t color);
     void clear();
 
     int getButtonPressed();
 
     void setBrightness(uint8_t brightness);
+    void updateColors();
 };
 
 extern LedManagerTask ledManager;

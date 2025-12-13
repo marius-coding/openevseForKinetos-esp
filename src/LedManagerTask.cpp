@@ -29,6 +29,7 @@
 #include "debug.h"
 #include "emonesp.h"
 #include "LedManagerTask.h"
+#include "app_config.h"
 
 // (Optional) define LED_TRACE for verbose tracing
 //#define LED_TRACE
@@ -122,49 +123,66 @@ uint8_t buttonShareState = 0;
 
 static uint32_t status_colour_map(u_int8_t lcdcol)
 {
-  // Updated to a friendlier CSS-inspired palette with comments containing #RRGGBB
-  // so VS Code shows color swatches.
-  u_int32_t color = 0xFFFFFF; // Default fallback -> White #FFFFFF
+  // Use configurable LED colors from app_config
+  u_int32_t color = led_color_white; // Default fallback -> White
   switch (lcdcol)
   {
   case OPENEVSE_LCD_OFF:
-    color = 0x000000; // Off (Black) #000000
+    color = led_color_off;
     break;
   case OPENEVSE_LCD_RED:
-    color = 0xFF6347; // Tomato #FF6347 (was Red #FF0000)
+    color = led_color_red;
     break;
   case OPENEVSE_LCD_GREEN:
-    color = 0x32CD32; // LimeGreen #32CD32 (was Green #00FF00)
+    color = led_color_green;
     break;
   case OPENEVSE_LCD_YELLOW:
-    color = 0xFFD700; // Gold #FFD700 (was Yellow #FFFF00)
+    color = led_color_yellow;
     break;
   case OPENEVSE_LCD_BLUE:
-    color = 0x1E90FF; // DodgerBlue #1E90FF (was Blue #0000FF)
+    color = led_color_blue;
     break;
   case OPENEVSE_LCD_VIOLET:
-    color = 0xBA55D3; // MediumOrchid #BA55D3 (was Violet #FF00FF)
+    color = led_color_violet;
     break;
   case OPENEVSE_LCD_TEAL:
-    color = 0x48D1CC; // MediumTurquoise #48D1CC (was Teal #00FFFF)
+    color = led_color_teal;
     break;
   case OPENEVSE_LCD_WHITE:
-    color = 0xFFFFFF; // White #FFFFFF
+    color = led_color_white;
     break;
   }
   return color;
 }
 #else
+// Helper function to get configurable color map entry
+static uint32_t get_colour_map_entry(u_int8_t index)
+{
+  switch (index)
+  {
+  case OPENEVSE_LCD_OFF:    return led_color_off;
+  case OPENEVSE_LCD_RED:    return led_color_red;
+  case OPENEVSE_LCD_GREEN:  return led_color_green;
+  case OPENEVSE_LCD_YELLOW: return led_color_yellow;
+  case OPENEVSE_LCD_BLUE:   return led_color_blue;
+  case OPENEVSE_LCD_VIOLET: return led_color_violet;
+  case OPENEVSE_LCD_TEAL:   return led_color_teal;
+  case OPENEVSE_LCD_WHITE:  return led_color_white;
+  default:                  return led_color_white;
+  }
+}
+
+// Kept for backwards compatibility but now uses config values
 static uint32_t status_colour_map[] =
 {
-  rgb(0, 0, 0),         // OPENEVSE_LCD_OFF  Black #000000
-  rgb(255, 99, 71),     // OPENEVSE_LCD_RED  Tomato #FF6347 (was 255,0,0)
-  rgb(50, 205, 50),     // OPENEVSE_LCD_GREEN LimeGreen #32CD32 (was 0,255,0)
-  rgb(255, 215, 0),     // OPENEVSE_LCD_YELLOW Gold #FFD700 (was 255,255,0)
-  rgb(30, 144, 255),    // OPENEVSE_LCD_BLUE DodgerBlue #1E90FF (was 0,0,255)
-  rgb(186, 85, 211),    // OPENEVSE_LCD_VIOLET MediumOrchid #BA55D3 (was 255,0,255)
-  rgb(72, 209, 204),    // OPENEVSE_LCD_TEAL MediumTurquoise #48D1CC (was 0,255,255)
-  rgb(255, 255, 255),   // OPENEVSE_LCD_WHITE White #FFFFFF
+  rgb(0, 0, 0),         // OPENEVSE_LCD_OFF  (will be overridden by config)
+  rgb(255, 99, 71),     // OPENEVSE_LCD_RED  (will be overridden by config)
+  rgb(50, 205, 50),     // OPENEVSE_LCD_GREEN (will be overridden by config)
+  rgb(255, 215, 0),     // OPENEVSE_LCD_YELLOW (will be overridden by config)
+  rgb(30, 144, 255),    // OPENEVSE_LCD_BLUE (will be overridden by config)
+  rgb(186, 85, 211),    // OPENEVSE_LCD_VIOLET (will be overridden by config)
+  rgb(72, 209, 204),    // OPENEVSE_LCD_TEAL (will be overridden by config)
+  rgb(255, 255, 255),   // OPENEVSE_LCD_WHITE (will be overridden by config)
 };
 #endif
 #endif
@@ -366,7 +384,7 @@ unsigned long LedManagerTask::loop(MicroTasks::WakeReason reason)
     {
       uint8_t lcdCol = _evse->getStateColour();
       DBUGVAR(lcdCol);
-      uint32_t col = status_colour_map[lcdCol];
+      uint32_t col = get_colour_map_entry(lcdCol);
       DBUGVAR(col, HEX);
       uint8_t evseR = (col >> 16) & 0xff;
       uint8_t evseG = (col >> 8) & 0xff;
@@ -406,7 +424,7 @@ unsigned long LedManagerTask::loop(MicroTasks::WakeReason reason)
     {
       uint8_t lcdCol = _evse->getStateColour();
       DBUGVAR(lcdCol);
-      uint32_t col = status_colour_map[lcdCol];
+      uint32_t col = get_colour_map_entry(lcdCol);
       DBUGVAR(col, HEX);
       uint8_t r = (col >> 16) & 0xff;
       uint8_t g = (col >> 8) & 0xff;
@@ -678,6 +696,27 @@ void LedManagerTask::test()
   MicroTask.wakeTask(this);
 }
 
+void LedManagerTask::testColor(uint32_t color)
+{
+#if RGB_LED
+#if defined(NEO_PIXEL_PIN) && defined(NEO_PIXEL_LENGTH) && defined(ENABLE_WS2812FX)
+  DBUGF("Testing LED color: 0x%06X", color);
+  ws2812fx.setColor(color);
+  ws2812fx.setMode(FX_MODE_STATIC);
+#elif defined(NEO_PIXEL_PIN) && defined(NEO_PIXEL_LENGTH)
+  uint8_t r = (color >> 16) & 0xFF;
+  uint8_t g = (color >> 8) & 0xFF;
+  uint8_t b = color & 0xFF;
+  setAllRGB(r, g, b);
+#elif defined(RED_LED) && defined(GREEN_LED) && defined(BLUE_LED)
+  uint8_t r = (color >> 16) & 0xFF;
+  uint8_t g = (color >> 8) & 0xFF;
+  uint8_t b = color & 0xFF;
+  setAllRGB(r, g, b);
+#endif
+#endif
+}
+
 void LedManagerTask::setWifiMode(bool client, bool connected)
 {
   DBUGF("WiFi mode %d %d", client, connected);
@@ -740,6 +779,13 @@ void LedManagerTask::setBrightness(uint8_t brightness)
 
   // Wake the task to refresh the state
   MicroTask.wakeTask(this);
+}
+
+void LedManagerTask::updateColors()
+{
+  DBUGF("LED colors updated from config");
+  // Wake the task to refresh the LED state with new colors
+  setNewState(true);
 }
 
 
