@@ -11,6 +11,7 @@
 #include "divert.h"
 #include "current_shaper.h"
 #include "manual.h"
+#include "app_config.h"
 
 static EvseProperties nullProperties;
 
@@ -318,6 +319,10 @@ void EvseManager::unlock() {
 
 unsigned long EvseManager::loop(MicroTasks::WakeReason reason)
 {
+  // Reapply timer state (shared across the function)
+  static unsigned long _reapplyTime = 0;
+  static bool _reapplyLogged = false;
+
   DBUG("EVSE manager woke: ");
   DBUG(WakeReason_Scheduled == reason ? "WakeReason_Scheduled" :
        WakeReason_Event == reason ? "WakeReason_Event" :
@@ -338,16 +343,60 @@ unsigned long EvseManager::loop(MicroTasks::WakeReason reason)
     return 10 * 1000;
   }
 
+  // Continuously monitor and reapply stored max current for Kinetos hardware
+  // Kinetos EVSE doesn't persist max_current_soft and may reject commands during initialization
+  static unsigned long _lastMaxCurrentCheck = 0;
+  static int _reapplyAttempts = 0;
+  
+  if(stored_max_current_soft > 0 && OpenEVSE.isConnected()) {
+    unsigned long now = millis();
+    
+    // Check every 5 seconds after initial 10-second delay
+    if(_reapplyTime == 0 && _lastMaxCurrentCheck == 0) {
+      // First connection - wait for EVSE to initialize
+      _reapplyTime = now + 10000;
+      _lastMaxCurrentCheck = now;
+      _reapplyAttempts = 0;
+      Serial.printf("EVSE_MAN: Will check max current in 10 seconds (stored=%d)\n", stored_max_current_soft);
+      DBUGF("Scheduling max current check in 10 seconds (stored=%d)", stored_max_current_soft);
+    } else if(_reapplyTime > 0 && now >= _reapplyTime) {
+      // Time to check/reapply
+      long current_max = _monitor.getMaxConfiguredCurrent();
+      
+      if(current_max != (long)stored_max_current_soft && current_max > 0) {
+        _reapplyAttempts++;
+        Serial.printf("EVSE_MAN: Max current mismatch (attempt %d) - stored=%d, EVSE=%ld\n", 
+                     _reapplyAttempts, stored_max_current_soft, current_max);
+        DBUGF("Reapplying max current (attempt %d): stored=%d, EVSE=%ld", 
+             _reapplyAttempts, stored_max_current_soft, current_max);
+        _monitor.setMaxConfiguredCurrent(stored_max_current_soft);
+        
+        // Continue trying for up to 10 attempts
+        if(_reapplyAttempts < 10) {
+          _reapplyTime = now + 5000; // Retry in 5 seconds
+        } else {
+          Serial.printf("EVSE_MAN: Gave up after 10 attempts - EVSE may not support max_current changes\n");
+          _reapplyTime = 0; // Stop trying
+        }
+      } else {
+        // Success or already at correct value
+        if(_reapplyAttempts > 0) {
+          Serial.printf("EVSE_MAN: Max current successfully set to %d A after %d attempts\n", 
+                       stored_max_current_soft, _reapplyAttempts);
+        }
+        _reapplyTime = now + 30000; // Check again in 30 seconds
+        _reapplyAttempts = 0;
+      }
+      
+      _lastMaxCurrentCheck = now;
+      _initialRestartComplete = true;
+    }
+  }
+
   DBUGVAR(_evseBootListener.IsTriggered());
   if(_evseBootListener.IsTriggered()) {
     _evaluateTargetState = true;
-    
-    // Restart EVSE controller after initial boot to fix charging current response issue
-    if(!_initialRestartComplete) {
-      DBUGLN("Performing initial EVSE controller restart to ensure proper initialization");
-      _monitor.restart();
-      _initialRestartComplete = true;
-    }
+    DBUGF("Boot event triggered (rare on Kinetos hardware)");
   }
 
   DBUGVAR(_evseStateListener.IsTriggered());
@@ -399,6 +448,12 @@ unsigned long EvseManager::loop(MicroTasks::WakeReason reason)
     _evaluateTargetState = false;
     setTargetState(_targetProperties);
   }
+  
+  // If reapply timer is pending, wake up soon to check it
+  if(_reapplyTime > 0) {
+    return 1000; // Check every second until reapply completes
+  }
+  
   return MicroTask.Infinate;
 }
 

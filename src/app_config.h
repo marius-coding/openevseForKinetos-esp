@@ -74,6 +74,18 @@ extern String ocpp_idtag;
 // RFID storage
 extern String rfid_storage;
 
+// LED configuration (always available, used only if RGB_LED is enabled at build time)
+extern uint8_t led_brightness;
+// LED color configuration (RGB values stored as 24-bit integers: 0xRRGGBB)
+extern uint32_t led_color_off;
+extern uint32_t led_color_red;
+extern uint32_t led_color_green;
+extern uint32_t led_color_yellow;
+extern uint32_t led_color_blue;
+extern uint32_t led_color_violet;
+extern uint32_t led_color_teal;
+extern uint32_t led_color_white;
+
 // Time
 extern String time_zone;
 
