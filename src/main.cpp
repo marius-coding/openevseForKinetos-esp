@@ -90,6 +90,7 @@ static uint32_t last_mem = 0;
 #define ESCAPEQUOTE(A) TEXTIFY(A)
 String currentfirmware = ESCAPEQUOTE(BUILD_TAG);
 String buildenv = ESCAPEQUOTE(BUILD_ENV_NAME);
+String builddate = ESCAPEQUOTE(BUILD_DATE);
 String serial;
 
 OcppTask ocpp = OcppTask();

@@ -568,6 +568,7 @@ bool config_serialize(DynamicJsonDocument &doc, bool longNames, bool compactOutp
   #if ENABLE_CONFIG_CHANGE_NOTIFICATION
   doc["buildenv"] = buildenv;
   doc["version"] = currentfirmware;
+  doc["build_date"] = builddate;
   doc["wifi_serial"] = serial;
   doc["protocol"] = "-";
   doc["espinfo"] = ESPAL.getChipInfo();

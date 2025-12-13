@@ -6,7 +6,6 @@
 
 #include "evse_man.h"
 #include "debug.h"
-#include "app_config.h" // for stored_max_current_soft
 
 #include "event_log.h"
 #include "divert.h"
@@ -133,7 +132,8 @@ EvseManager::EvseManager(Stream &port, EventLog &eventLog) :
   _vehicleLastUpdated(0),
   _vehicleStateOfCharge(0),
   _vehicleRange(0),
-  _vehicleEta(0)
+  _vehicleEta(0),
+  _initialRestartComplete(false)
 {
 }
 
@@ -341,20 +341,12 @@ unsigned long EvseManager::loop(MicroTasks::WakeReason reason)
   DBUGVAR(_evseBootListener.IsTriggered());
   if(_evseBootListener.IsTriggered()) {
     _evaluateTargetState = true;
-
-    // Reapply stored max current if EVSE lost it after power cycle.
-    // Only do this once right after boot trigger.
-    if(stored_max_current_soft > 0) {
-      long currentEvse = _monitor.getMaxConfiguredCurrent();
-      DBUGF("Stored max current (persisted) %lu, EVSE reports %ld", (unsigned long)stored_max_current_soft, currentEvse);
-      if(currentEvse != (long)stored_max_current_soft) {
-        DBUGF("Reapplying stored max current %lu (EVSE currently %ld)", (unsigned long)stored_max_current_soft, currentEvse);
-        setMaxConfiguredCurrent(stored_max_current_soft);
-      } else {
-        DBUGLN("Stored max current matches EVSE; no reapply needed");
-      }
-    } else {
-      DBUGLN("No stored max current >0; nothing to reapply");
+    
+    // Restart EVSE controller after initial boot to fix charging current response issue
+    if(!_initialRestartComplete) {
+      DBUGLN("Performing initial EVSE controller restart to ensure proper initialization");
+      _monitor.restart();
+      _initialRestartComplete = true;
     }
   }
 

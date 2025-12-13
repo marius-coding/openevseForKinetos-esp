@@ -234,6 +234,7 @@ class EvseManager : public MicroTasks::Task
 
     bool _evaluateClaims;
     bool _evaluateTargetState;
+    bool _initialRestartComplete;
 
     uint32_t _vehicleValid;
     uint32_t _vehicleUpdated;

@@ -11,9 +11,6 @@
 #ifdef ENABLE_SDM630MCT
 #include "sdm630mct.h"
 #endif
-#ifdef ENABLE_KINETOS_METER
-#include "kinetos_meter.h"
-#endif
 
 #ifdef ENABLE_MCP9808
 #ifndef I2C_SDA
@@ -311,17 +308,6 @@ void EvseMonitor::updateCurrentSettings(long min_current, long max_hardware_curr
   _max_hardware_current = max_hardware_current;
   _pilot = pilot;
   _max_configured_current = max_configured_current;
-
-  // Workaround: If EVSE returns a default/incorrect (often 0 or hardware max) configured current
-  // and we have a locally stored desired value (from ESP config), reapply it once here.
-  #include "app_config.h" // local include inside function scope to avoid global header churn
-  static bool reapplied_max_current_once = false;
-  if(!reapplied_max_current_once && stored_max_current_soft > 0 && _max_configured_current != (long)stored_max_current_soft) {
-    DBUGF("Reapplying stored max current (boot sync) %lu instead of EVSE reported %ld", (unsigned long)stored_max_current_soft, _max_configured_current);
-    reapplied_max_current_once = true;
-    // Call internal setter (will clamp & send RAPI). This will trigger settings changed event.
-    setMaxConfiguredCurrent(stored_max_current_soft);
-  }
 }
 
 unsigned long EvseMonitor::loop(MicroTasks::WakeReason reason)
@@ -341,31 +327,15 @@ unsigned long EvseMonitor::loop(MicroTasks::WakeReason reason)
     if(i_ok) { _amp = mi; }
     if(p_ok) { _power = mp; }
     // if (v_ok || i_ok || p_ok) {
-      StaticJsonDocument<128> event;
+      StaticJsonDocument<64> event;
       if(v_ok) event["voltage"] = _voltage * VOLTS_SCALE_FACTOR;
       if(i_ok) event["amp"] = _amp * AMPS_SCALE_FACTOR;
-      if(p_ok) event["power"] = _power * POWER_SCALE_FACTOR;
+      if(p_ok) event["power"] = 3000; //_power * POWER_SCALE_FACTOR;
+      event["power4"] = 2000;
+      _amp = 1234;
       event_send(event);
       _data_ready.ready(EVSE_MONITOR_AMP_AND_VOLT_DATA_READY);
     // }
-  }
-#elif defined(ENABLE_KINETOS_METER)
-  // Kinetos power meter: read raw registers via new driver and publish scaled values
-  {
-    static KinetosMeter meter(Serial2, 0x01, -1);
-    static bool meter_init = false;
-    if(!meter_init) { meter.begin(9600, true); meter_init = true; }
-
-    _voltage = meter.getVoltage();   // raw / 10.0
-    _amp     = meter.getCurrent();   // raw / 1000.0
-    _power   = meter.getPower();     // raw / 10.0
-
-    StaticJsonDocument<128> event;
-    event["voltage"] = _voltage * VOLTS_SCALE_FACTOR;
-    event["amp"] = _amp * AMPS_SCALE_FACTOR;
-    event["power"] = _power * POWER_SCALE_FACTOR;
-    event_send(event);
-    _data_ready.ready(EVSE_MONITOR_AMP_AND_VOLT_DATA_READY);
   }
 #endif
   
@@ -779,7 +749,7 @@ void EvseMonitor::getStatusFromEvse(bool allowStart)
 
 void EvseMonitor::getChargeCurrentAndVoltageFromEvse()
 {
-#if !defined(ENABLE_SDM630MCT) && !defined(ENABLE_KINETOS_METER)
+#ifndef ENABLE_SDM630MCT
   if(_state.isCharging())
   {
     DBUGLN("Get charge current/voltage status");

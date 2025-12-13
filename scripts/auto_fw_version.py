@@ -1,5 +1,6 @@
 import subprocess
 import os
+from datetime import datetime
 
 def get_build_flag():
     ret = subprocess.run(["git", "rev-parse", "HEAD"], stdout=subprocess.PIPE, text=True) #Uses any tags
@@ -25,7 +26,10 @@ def get_build_flag():
         short_hash += "_modified"
         full_hash += "_modified"
 
-    build_flags = "-D BUILD_TAG=" + build_version + " " + "-D BUILD_HASH=" + short_hash + ""
+    # Get the current build date/time in ISO 8601 format
+    build_date = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    build_flags = "-D BUILD_TAG=" + build_version + " " + "-D BUILD_HASH=" + short_hash + " " + "-D BUILD_DATE=" + build_date
 
     return build_flags
 
