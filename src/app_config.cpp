@@ -117,9 +117,17 @@ String tesla_vehicle_id;
 // Vehicle
 uint8_t vehicle_data_src;
 
-#if RGB_LED
+// LED configuration (always available, used only if RGB_LED is enabled at build time)
 uint8_t led_brightness;
-#endif
+// LED color configuration (RGB values stored as 24-bit integers: 0xRRGGBB)
+uint32_t led_color_off = 0x000000;       // Black
+uint32_t led_color_red = 0xFF6347;       // Tomato
+uint32_t led_color_green = 0x32CD32;     // LimeGreen
+uint32_t led_color_yellow = 0xFFD700;    // Gold
+uint32_t led_color_blue = 0x1E90FF;      // DodgerBlue
+uint32_t led_color_violet = 0xBA55D3;    // MediumOrchid
+uint32_t led_color_teal = 0x48D1CC;      // MediumTurquoise
+uint32_t led_color_white = 0xFFFFFF;     // White
 
 // RFID storage
 String rfid_storage;
@@ -229,10 +237,18 @@ ConfigOpt *opts[] =
 // RFID storage
   new ConfigOptDefinition<String>(rfid_storage, "", "rfid_storage", "rs"),
 
-#if RGB_LED
+// LED configuration (always available in config, used only if RGB_LED is enabled at build time)
 // LED brightness
   new ConfigOptDefinition<uint8_t>(led_brightness, LED_DEFAULT_BRIGHTNESS, "led_brightness", "lb"),
-#endif
+// LED colors
+  new ConfigOptDefinition<uint32_t>(led_color_off, 0x000000, "led_color_off", "lco"),
+  new ConfigOptDefinition<uint32_t>(led_color_red, 0xFF6347, "led_color_red", "lcr"),
+  new ConfigOptDefinition<uint32_t>(led_color_green, 0x32CD32, "led_color_green", "lcg"),
+  new ConfigOptDefinition<uint32_t>(led_color_yellow, 0xFFD700, "led_color_yellow", "lcy"),
+  new ConfigOptDefinition<uint32_t>(led_color_blue, 0x1E90FF, "led_color_blue", "lcb"),
+  new ConfigOptDefinition<uint32_t>(led_color_violet, 0xBA55D3, "led_color_violet", "lcv"),
+  new ConfigOptDefinition<uint32_t>(led_color_teal, 0x48D1CC, "led_color_teal", "lct"),
+  new ConfigOptDefinition<uint32_t>(led_color_white, 0xFFFFFF, "led_color_white", "lcw"),
 
 // Scheduler options
   new ConfigOptDefinition<uint32_t>(scheduler_start_window, SCHEDULER_DEFAULT_START_WINDOW, "scheduler_start_window", "ssw"),
@@ -351,6 +367,17 @@ config_load_settings()
 
   // now lets apply any default flags that have not explicitly been set by the user
   flags |= CONFIG_DEFAULT_FLAGS & ~flags_changed;
+
+  // Validate LED color values to prevent crashes from corrupt data
+  // Colors must be in range 0x000000 to 0xFFFFFF (24-bit RGB)
+  if(led_color_off > 0xFFFFFF) led_color_off = 0x000000;
+  if(led_color_red > 0xFFFFFF) led_color_red = 0xFF6347;
+  if(led_color_green > 0xFFFFFF) led_color_green = 0x32CD32;
+  if(led_color_yellow > 0xFFFFFF) led_color_yellow = 0xFFD700;
+  if(led_color_blue > 0xFFFFFF) led_color_blue = 0x1E90FF;
+  if(led_color_violet > 0xFFFFFF) led_color_violet = 0xBA55D3;
+  if(led_color_teal > 0xFFFFFF) led_color_teal = 0x48D1CC;
+  if(led_color_white > 0xFFFFFF) led_color_white = 0xFFFFFF;
 }
 
 void config_changed(String name)
@@ -360,6 +387,25 @@ void config_changed(String name)
 #if ENABLE_CONFIG_CHANGE_NOTIFICATION
   if(name == "time_zone") {
     timeManager.setTimeZone(time_zone);
+  } else if(name.startsWith("led_color_")) {
+    // Validate LED color value
+    uint32_t *color_ptr = nullptr;
+    if(name == "led_color_off") color_ptr = &led_color_off;
+    else if(name == "led_color_red") color_ptr = &led_color_red;
+    else if(name == "led_color_green") color_ptr = &led_color_green;
+    else if(name == "led_color_yellow") color_ptr = &led_color_yellow;
+    else if(name == "led_color_blue") color_ptr = &led_color_blue;
+    else if(name == "led_color_violet") color_ptr = &led_color_violet;
+    else if(name == "led_color_teal") color_ptr = &led_color_teal;
+    else if(name == "led_color_white") color_ptr = &led_color_white;
+    
+    // Validate range (24-bit RGB only)
+    if(color_ptr && *color_ptr > 0xFFFFFF) {
+      DBUGF("Invalid LED color value 0x%08X, resetting to default", *color_ptr);
+      *color_ptr &= 0xFFFFFF; // Mask to 24-bit
+    }
+    // Note: Don't call ledManager.updateColors() here - it will be initialized
+    // with the correct colors when ledManager.begin() is called during setup
   } else if(name == "flags") {
     divert.setMode((config_divert_enabled() && 1 == config_charge_mode()) ? DivertMode::Eco : DivertMode::Normal);
     if(mqtt.isConnected() != config_mqtt_enabled()) {
@@ -392,6 +438,9 @@ void config_changed(String name)
 #if RGB_LED
   } else if(name == "led_brightness") {
     ledManager.setBrightness(led_brightness);
+  } else if(name.startsWith("led_color_")) {
+    // LED colors changed, trigger LED manager to update
+    ledManager.updateColors();
 #endif
   } else if(name.startsWith("limit_default_")) {
     LimitProperties limitprops;
