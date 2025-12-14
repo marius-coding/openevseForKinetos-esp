@@ -1,13 +1,13 @@
 #include "web_server.assets_components_bb056724_css_gz.h"
 #include "web_server.assets_components_ce5bee80_js_gz.h"
-#include "web_server.assets_config_79421f69_js_gz.h"
+#include "web_server.assets_config_07662739_js_gz.h"
 #include "web_server.assets_config_9c33d9fd_css_gz.h"
 #include "web_server.assets_en_a7f378d4_js_gz.h"
 #include "web_server.assets_es_09a99823_js_gz.h"
 #include "web_server.assets_fr_ca542547_js_gz.h"
 #include "web_server.assets_hu_8280bea7_js_gz.h"
 #include "web_server.assets_icons_11ca588d_js_gz.h"
-#include "web_server.assets_index_7000a6b2_js_gz.h"
+#include "web_server.assets_index_971b1444_js_gz.h"
 #include "web_server.assets_index_e83393eb_css_gz.h"
 #include "web_server.assets_logo_mini_e4e21c4b_png.h"
 #include "web_server.assets_vendor_143d8acd_js_gz.h"
@@ -21,14 +21,14 @@
 StaticFile web_server_static_files[] = {
   { "/assets/components-bb056724.css", CONTENT_COMPONENTS_BB056724_CSS_GZ, sizeof(CONTENT_COMPONENTS_BB056724_CSS_GZ) - 1, _CONTENT_TYPE_CSS, CONTENT_COMPONENTS_BB056724_CSS_GZ_ETAG, true },
   { "/assets/components-ce5bee80.js", CONTENT_COMPONENTS_CE5BEE80_JS_GZ, sizeof(CONTENT_COMPONENTS_CE5BEE80_JS_GZ) - 1, _CONTENT_TYPE_JS, CONTENT_COMPONENTS_CE5BEE80_JS_GZ_ETAG, true },
-  { "/assets/config-79421f69.js", CONTENT_CONFIG_79421F69_JS_GZ, sizeof(CONTENT_CONFIG_79421F69_JS_GZ) - 1, _CONTENT_TYPE_JS, CONTENT_CONFIG_79421F69_JS_GZ_ETAG, true },
+  { "/assets/config-07662739.js", CONTENT_CONFIG_07662739_JS_GZ, sizeof(CONTENT_CONFIG_07662739_JS_GZ) - 1, _CONTENT_TYPE_JS, CONTENT_CONFIG_07662739_JS_GZ_ETAG, true },
   { "/assets/config-9c33d9fd.css", CONTENT_CONFIG_9C33D9FD_CSS_GZ, sizeof(CONTENT_CONFIG_9C33D9FD_CSS_GZ) - 1, _CONTENT_TYPE_CSS, CONTENT_CONFIG_9C33D9FD_CSS_GZ_ETAG, true },
   { "/assets/en-a7f378d4.js", CONTENT_EN_A7F378D4_JS_GZ, sizeof(CONTENT_EN_A7F378D4_JS_GZ) - 1, _CONTENT_TYPE_JS, CONTENT_EN_A7F378D4_JS_GZ_ETAG, true },
   { "/assets/es-09a99823.js", CONTENT_ES_09A99823_JS_GZ, sizeof(CONTENT_ES_09A99823_JS_GZ) - 1, _CONTENT_TYPE_JS, CONTENT_ES_09A99823_JS_GZ_ETAG, true },
   { "/assets/fr-ca542547.js", CONTENT_FR_CA542547_JS_GZ, sizeof(CONTENT_FR_CA542547_JS_GZ) - 1, _CONTENT_TYPE_JS, CONTENT_FR_CA542547_JS_GZ_ETAG, true },
   { "/assets/hu-8280bea7.js", CONTENT_HU_8280BEA7_JS_GZ, sizeof(CONTENT_HU_8280BEA7_JS_GZ) - 1, _CONTENT_TYPE_JS, CONTENT_HU_8280BEA7_JS_GZ_ETAG, true },
   { "/assets/icons-11ca588d.js", CONTENT_ICONS_11CA588D_JS_GZ, sizeof(CONTENT_ICONS_11CA588D_JS_GZ) - 1, _CONTENT_TYPE_JS, CONTENT_ICONS_11CA588D_JS_GZ_ETAG, true },
-  { "/assets/index-7000a6b2.js", CONTENT_INDEX_7000A6B2_JS_GZ, sizeof(CONTENT_INDEX_7000A6B2_JS_GZ) - 1, _CONTENT_TYPE_JS, CONTENT_INDEX_7000A6B2_JS_GZ_ETAG, true },
+  { "/assets/index-971b1444.js", CONTENT_INDEX_971B1444_JS_GZ, sizeof(CONTENT_INDEX_971B1444_JS_GZ) - 1, _CONTENT_TYPE_JS, CONTENT_INDEX_971B1444_JS_GZ_ETAG, true },
   { "/assets/index-e83393eb.css", CONTENT_INDEX_E83393EB_CSS_GZ, sizeof(CONTENT_INDEX_E83393EB_CSS_GZ) - 1, _CONTENT_TYPE_CSS, CONTENT_INDEX_E83393EB_CSS_GZ_ETAG, true },
   { "/assets/logo-mini-e4e21c4b.png", CONTENT_LOGO_MINI_E4E21C4B_PNG, sizeof(CONTENT_LOGO_MINI_E4E21C4B_PNG) - 1, _CONTENT_TYPE_PNG, CONTENT_LOGO_MINI_E4E21C4B_PNG_ETAG, false },
   { "/assets/vendor-143d8acd.js", CONTENT_VENDOR_143D8ACD_JS_GZ, sizeof(CONTENT_VENDOR_143D8ACD_JS_GZ) - 1, _CONTENT_TYPE_JS, CONTENT_VENDOR_143D8ACD_JS_GZ_ETAG, true },

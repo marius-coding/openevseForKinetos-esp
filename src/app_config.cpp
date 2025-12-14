@@ -654,8 +654,8 @@ bool config_serialize(DynamicJsonDocument &doc, bool longNames, bool compactOutp
     doc["vent_check"] = evse.isVentRequiredEnabled();
     doc["temp_check"] = evse.isTemperatureCheckEnabled();
     long reported_max = evse.getMaxConfiguredCurrent();
-    // Fallback: if EVSE returns 0 (some Kinetos boards on cold boot) but we have a stored value, surface stored value so UI does not show 0A.
-    if(reported_max == 0 && stored_max_current_soft > 0) {
+    //Use stored value instead of reported max. Reported Value has proven to be unreliable.
+    if(stored_max_current_soft > 0) {
       reported_max = stored_max_current_soft;
     }
     doc["max_current_soft"] = reported_max;

@@ -28,25 +28,40 @@ def parse_rapi_line(line):
 
 def main():
     parser = argparse.ArgumentParser(description='RAPI protocol sniffer (RX/TX)')
-    parser.add_argument('--rx', required=True, help='RX serial port (e.g. /dev/ttyUSB0)')
-    parser.add_argument('--tx', required=True, help='TX serial port (e.g. /dev/ttyUSB1)')
+    parser.add_argument('--rx', help='RX serial port (e.g. /dev/ttyUSB0)')
+    parser.add_argument('--tx', help='TX serial port (e.g. /dev/ttyUSB1)')
     parser.add_argument('--baud', type=int, default=115200, help='Baud rate (default: 115200)')
     args = parser.parse_args()
 
+    if not args.rx and not args.tx:
+        print("Error: At least one of --rx or --tx must be specified", flush=True)
+        sys.exit(1)
+
+    ser_rx = None
+    ser_tx = None
+    
     try:
-        ser_rx = serial.Serial(args.rx, args.baud, timeout=0.1)
-        ser_tx = serial.Serial(args.tx, args.baud, timeout=0.1)
+        if args.rx:
+            ser_rx = serial.Serial(args.rx, args.baud, timeout=0.1)
+        if args.tx:
+            ser_tx = serial.Serial(args.tx, args.baud, timeout=0.1)
     except Exception as e:
         print(f"Error opening serial ports: {e}", flush=True)
         sys.exit(1)
-    print(f"Listening on RX: {args.rx} and TX: {args.tx} at {args.baud} baud...", flush=True)
+    
+    ports_str = []
+    if args.rx:
+        ports_str.append(f"RX: {args.rx}")
+    if args.tx:
+        ports_str.append(f"TX: {args.tx}")
+    print(f"Listening on {', '.join(ports_str)} at {args.baud} baud...", flush=True)
 
     buffer_rx = b''
     buffer_tx = b''
     while True:
         try:
-            data_rx = ser_rx.read(256)
-            data_tx = ser_tx.read(256)
+            data_rx = ser_rx.read(256) if ser_rx else b''
+            data_tx = ser_tx.read(256) if ser_tx else b''
             if data_rx:
                 buffer_rx += data_rx
                 while b'$' in buffer_rx and b'^' in buffer_rx:
