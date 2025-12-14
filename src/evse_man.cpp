@@ -344,8 +344,8 @@ unsigned long EvseManager::loop(MicroTasks::WakeReason reason)
     
     // Restart EVSE controller after initial boot to fix charging current response issue
     if(!_initialRestartComplete) {
-      DBUGLN("Performing initial EVSE controller restart to ensure proper initialization");
-      _monitor.restart();
+      // DBUGLN("Performing initial EVSE controller restart to ensure proper initialization");
+      // _monitor.restart();
       _initialRestartComplete = true;
     }
   }

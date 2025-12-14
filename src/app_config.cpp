@@ -655,9 +655,9 @@ bool config_serialize(DynamicJsonDocument &doc, bool longNames, bool compactOutp
     doc["temp_check"] = evse.isTemperatureCheckEnabled();
     long reported_max = evse.getMaxConfiguredCurrent();
     //Use stored value instead of reported max. Reported Value has proven to be unreliable.
-    if(stored_max_current_soft > 0) {
-      reported_max = stored_max_current_soft;
-    }
+    // if(stored_max_current_soft > 0) {
+    //   reported_max = stored_max_current_soft;
+    // }
     doc["max_current_soft"] = reported_max;
     // Expose persisted desired value (may differ immediately after cold boot
     // until reapply logic runs)
