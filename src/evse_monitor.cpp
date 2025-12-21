@@ -11,6 +11,9 @@
 #ifdef ENABLE_SDM630MCT
 #include "sdm630mct.h"
 #endif
+#ifdef ENABLE_KINETOS_METER
+#include "kinetos_meter.h"
+#endif
 
 #ifdef ENABLE_MCP9808
 #ifndef I2C_SDA
@@ -336,6 +339,29 @@ unsigned long EvseMonitor::loop(MicroTasks::WakeReason reason)
       event_send(event);
       _data_ready.ready(EVSE_MONITOR_AMP_AND_VOLT_DATA_READY);
     // }
+  }
+#endif
+#ifdef ENABLE_KINETOS_METER
+  // When Kinetos meter is present, poll it each loop cycle to update readings
+  {
+    static KinetosMeter meter(Serial2, 0x01, -1);
+    static bool meter_init = false;
+    if(!meter_init) { meter.begin(9600, true); meter_init = true; }
+    double mv = meter.getVoltage();
+    double mi = meter.getCurrent();
+    double mp = meter.getPower();
+    bool v_ok = (mv > 0);
+    bool i_ok = (mi >= 0);
+    bool p_ok = (mp >= 0);
+    if(v_ok) { _voltage = mv; }
+    if(i_ok) { _amp = mi; }
+    if(p_ok) { _power = mp; }
+    StaticJsonDocument<64> event;
+    if(v_ok) event["voltage"] = _voltage * VOLTS_SCALE_FACTOR;
+    if(i_ok) event["amp"] = _amp * AMPS_SCALE_FACTOR;
+    if(p_ok) event["power"] = _power * POWER_SCALE_FACTOR;
+    event_send(event);
+    _data_ready.ready(EVSE_MONITOR_AMP_AND_VOLT_DATA_READY);
   }
 #endif
   
@@ -749,7 +775,7 @@ void EvseMonitor::getStatusFromEvse(bool allowStart)
 
 void EvseMonitor::getChargeCurrentAndVoltageFromEvse()
 {
-#ifndef ENABLE_SDM630MCT
+#if !defined(ENABLE_SDM630MCT) && !defined(ENABLE_KINETOS_METER)
   if(_state.isCharging())
   {
     DBUGLN("Get charge current/voltage status");
