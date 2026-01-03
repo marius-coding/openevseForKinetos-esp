@@ -304,6 +304,53 @@ HTML_CONTENT = r"""<!DOCTYPE html>
             transform: scale(1.1);
             border-color: #667eea;
         }
+        
+        .command-info {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .command-info h3 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 18px;
+            text-align: center;
+        }
+        
+        .command-section {
+            margin-bottom: 15px;
+        }
+        
+        .command-section:last-child {
+            margin-bottom: 0;
+        }
+        
+        .command-section label {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .command-box {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #333;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            line-height: 1.6;
+        }
     </style>
 </head>
 <body>
@@ -396,6 +443,18 @@ HTML_CONTENT = r"""<!DOCTYPE html>
         </div>
         
         <div class="status" id="status"></div>
+        
+        <div class="command-info">
+            <h3>API Commands</h3>
+            <div class="command-section">
+                <label>HTTP POST Command</label>
+                <div class="command-box" id="httpCommand"></div>
+            </div>
+            <div class="command-section">
+                <label>MQTT Command</label>
+                <div class="command-box" id="mqttCommand"></div>
+            </div>
+        </div>
     </div>
     
     <script>
@@ -407,6 +466,8 @@ HTML_CONTENT = r"""<!DOCTYPE html>
         const brightnessValue = document.getElementById('brightnessValue');
         const liveUpdateCheckbox = document.getElementById('liveUpdate');
         const statusDiv = document.getElementById('status');
+        const httpCommandDiv = document.getElementById('httpCommand');
+        const mqttCommandDiv = document.getElementById('mqttCommand');
         
         // Initialize iro.js color picker
         const colorPicker = new iro.ColorPicker('#colorPicker', {
@@ -435,6 +496,8 @@ HTML_CONTENT = r"""<!DOCTYPE html>
             greenValue.textContent = color.rgb.g;
             blueValue.textContent = color.rgb.b;
             
+            updateCommandDisplay();
+            
             if (liveUpdateCheckbox.checked) {
                 applyColor();
             }
@@ -443,6 +506,7 @@ HTML_CONTENT = r"""<!DOCTYPE html>
         // Update brightness display
         brightnessSlider.addEventListener('input', (e) => {
             brightnessValue.textContent = e.target.value;
+            updateCommandDisplay();
             if (liveUpdateCheckbox.checked) {
                 applyColor();
             }
@@ -450,15 +514,22 @@ HTML_CONTENT = r"""<!DOCTYPE html>
         
         // State and timeout changes
         document.getElementById('state').addEventListener('change', () => {
+            updateCommandDisplay();
             if (liveUpdateCheckbox.checked) {
                 applyColor();
             }
         });
         
         document.getElementById('timeout').addEventListener('change', () => {
+            updateCommandDisplay();
             if (liveUpdateCheckbox.checked) {
                 applyColor();
             }
+        });
+        
+        // Hostname changes
+        document.getElementById('hostname').addEventListener('input', () => {
+            updateCommandDisplay();
         });
         
         // Preset colors
@@ -479,6 +550,36 @@ HTML_CONTENT = r"""<!DOCTYPE html>
                     statusDiv.style.display = 'none';
                 }, 3000);
             }
+        }
+        
+        function updateCommandDisplay() {
+            const hostname = document.getElementById('hostname').value || 'openevse.local';
+            const state = document.getElementById('state').value;
+            const color = colorPicker.color.hexString;
+            const brightness = parseInt(brightnessSlider.value);
+            const timeout = parseInt(document.getElementById('timeout').value);
+            
+            // Build HTTP command
+            const httpPayload = {
+                state: state,
+                color: color,
+                brightness: brightness,
+                timeout: timeout
+            };
+            
+            const httpCmd = `curl -X POST http://${hostname}/led \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(httpPayload)}'`;
+            
+            httpCommandDiv.textContent = httpCmd;
+            
+            // Build MQTT command
+            const mqttPayload = JSON.stringify(httpPayload);
+            const mqttCmd = `mosquitto_pub -h <mqtt-broker> \\
+  -t openevse/led/set \\
+  -m '${mqttPayload}'`;
+            
+            mqttCommandDiv.textContent = mqttCmd;
         }
         
         async function applyColor() {
@@ -546,6 +647,9 @@ HTML_CONTENT = r"""<!DOCTYPE html>
         greenValue.textContent = initialColor.rgb.g;
         blueValue.textContent = initialColor.rgb.b;
         brightnessValue.textContent = brightnessSlider.value;
+        
+        // Update command display
+        updateCommandDisplay();
         
         // Show helpful CORS message on load
         setTimeout(() => {
