@@ -124,15 +124,17 @@ uint32_t LedManagerTask::applyColorOverride(uint8_t lcdCol) const
 {
   // Map LCD color to override index
   // OPENEVSE_LCD_OFF=0, RED=1, GREEN=2, YELLOW=3, BLUE=4, VIOLET=5, TEAL=6, WHITE=7
+  // Actual EVSE state-to-color mapping:
+  // NOT_CONNECTED -> GREEN (2), CONNECTED -> YELLOW (3), CHARGING -> TEAL (6)
   int stateIdx = -1;
   switch (lcdCol) {
     case OPENEVSE_LCD_OFF:    stateIdx = 0; break;  // off
     case OPENEVSE_LCD_RED:    stateIdx = 1; break;  // error
-    case OPENEVSE_LCD_GREEN:  stateIdx = 4; break;  // charging
-    case OPENEVSE_LCD_YELLOW: stateIdx = 3; break;  // waiting
-    case OPENEVSE_LCD_BLUE:   stateIdx = 2; break;  // ready
+    case OPENEVSE_LCD_GREEN:  stateIdx = 2; break;  // ready (NOT_CONNECTED)
+    case OPENEVSE_LCD_YELLOW: stateIdx = 3; break;  // waiting (CONNECTED)
+    case OPENEVSE_LCD_TEAL:   stateIdx = 4; break;  // charging (CHARGING)
     case OPENEVSE_LCD_VIOLET: stateIdx = 5; break;  // vent_required
-    case OPENEVSE_LCD_TEAL:   stateIdx = 6; break;  // custom
+    case OPENEVSE_LCD_BLUE:   stateIdx = 7; break;  // default (unused in normal operation)
     case OPENEVSE_LCD_WHITE:  stateIdx = 7; break;  // default
   }
   
@@ -155,14 +157,14 @@ uint8_t LedManagerTask::getEffectiveBrightness(uint8_t lcdCol) const
 {
   int stateIdx = -1;
   switch (lcdCol) {
-    case OPENEVSE_LCD_OFF:    stateIdx = 0; break;
-    case OPENEVSE_LCD_RED:    stateIdx = 1; break;
-    case OPENEVSE_LCD_GREEN:  stateIdx = 4; break;
-    case OPENEVSE_LCD_YELLOW: stateIdx = 3; break;
-    case OPENEVSE_LCD_BLUE:   stateIdx = 2; break;
-    case OPENEVSE_LCD_VIOLET: stateIdx = 5; break;
-    case OPENEVSE_LCD_TEAL:   stateIdx = 6; break;
-    case OPENEVSE_LCD_WHITE:  stateIdx = 7; break;
+    case OPENEVSE_LCD_OFF:    stateIdx = 0; break;  // off
+    case OPENEVSE_LCD_RED:    stateIdx = 1; break;  // error
+    case OPENEVSE_LCD_GREEN:  stateIdx = 2; break;  // ready (NOT_CONNECTED)
+    case OPENEVSE_LCD_YELLOW: stateIdx = 3; break;  // waiting (CONNECTED)
+    case OPENEVSE_LCD_TEAL:   stateIdx = 4; break;  // charging (CHARGING)
+    case OPENEVSE_LCD_VIOLET: stateIdx = 5; break;  // vent_required
+    case OPENEVSE_LCD_BLUE:   stateIdx = 7; break;  // default (unused in normal operation)
+    case OPENEVSE_LCD_WHITE:  stateIdx = 7; break;  // default
   }
   
   // Check "all" override first
@@ -886,6 +888,10 @@ void LedManagerTask::updateColors()
 
 // ===== LED Color Override Implementation =====
 
+// Maps API state strings to override array indices
+// Note: Indices correspond to EVSE states:
+//   0=off, 1=error, 2=ready (NOT_CONNECTED->GREEN), 3=waiting (CONNECTED->YELLOW),
+//   4=charging (CHARGING->TEAL), 5=vent_required, 6=custom, 7=default, 8=all
 int LedManagerTask::getOverrideIndex(const char* stateStr) const
 {
   if (strcmp(stateStr, "off") == 0) return 0;
