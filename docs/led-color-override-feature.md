@@ -21,11 +21,10 @@ Add MQTT and HTTP API commands to temporarily override LED strip colors for visu
 **Parameters:**
 - `state` (string, required): LED state to override. Valid values:
   - `"off"` - LED off state
-  - `"error"` - Error/Fault state
-  - `"ready"` - Ready/Connected state
-  - `"waiting"` - Waiting/Sleeping state
-  - `"charging"` - Charging state
-  - `"vent_required"` - Vent required state
+  - `"error"` - Error/Fault states (includes vent required, GFI fault, etc.)
+  - `"ready"` - Ready state (not connected, waiting for vehicle)
+  - `"waiting"` - Waiting state (vehicle connected, ready to charge)
+  - `"charging"` - Charging state (actively charging)
   - `"custom"` - Custom state
   - `"default"` - Default/Fallback state
   - `"all"` - Override color regardless of LED state
@@ -72,7 +71,7 @@ Set temporary LED color override.
 **Parameters:** Same as MQTT API above
 
 **Valid State Values:**
-- `off`, `error`, `ready`, `waiting`, `charging`, `vent_required`, `custom`, `default`, `all`
+- `off`, `error`, `ready`, `waiting`, `charging`, `custom`, `default`, `all`
 
 **Response:**
 ```json
@@ -113,7 +112,7 @@ Clear LED color override and restore default behavior.
 ✅ **Completed** - Feature fully implemented in the following files:
 
 ### Core LED Management (`src/LedManagerTask.h`, `src/LedManagerTask.cpp`)
-- Added `ColorOverride` structure to track override state per LED state (9 states supported)
+- Added `ColorOverride` structure to track override state per LED state (8 states supported)
 - Implemented `setColorOverride()` method to set color, brightness, and timeout
 - Implemented `clearColorOverride()` method to clear one or all overrides
 - Implemented `checkOverrideTimeouts()` to automatically expire timed overrides
@@ -153,8 +152,9 @@ Clear LED color override and restore default behavior.
 
 ### State Management
 The LED override should be managed as a runtime state in `LedManagerTask` with the following properties:
-- Override active flag per LED state (off, error, ready, waiting, charging, vent_required, custom, default, all)
-- Target state filter (maps to LED color states: `led_color_off`, `led_color_red`, `led_color_green`, `led_color_yellow`, `led_color_blue`, `led_color_violet`, `led_color_teal`, `led_color_white`)
+- Override active flag per LED state (off, error, ready, waiting, charging, custom, default, all)
+- Target state filter (maps to LED color states: `led_color_off`, `led_color_red`, `led_color_green`, `led_color_yellow`, `led_color_teal`, `led_color_violet`, `led_color_white`)
+- Note: `led_color_blue` is unused in normal EVSE operation
 - Override color (24-bit RGB value) per state
 - Override brightness (0-255) per state
 - Timeout expiration timestamp per state

@@ -60,7 +60,7 @@ class LedManagerTask : public MicroTasks::Task
     };
     
     // Override state for each LED state
-    ColorOverride _overrides[9];  // One for each: off, error, ready, waiting, charging, vent_required, custom, default, all
+    ColorOverride _overrides[8];  // One for each: off, error, ready, waiting, charging, custom, default, all
     
     // Helper to get override index from state string
     int getOverrideIndex(const char* stateStr) const;

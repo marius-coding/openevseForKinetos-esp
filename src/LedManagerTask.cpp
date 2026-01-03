@@ -126,21 +126,22 @@ uint32_t LedManagerTask::applyColorOverride(uint8_t lcdCol) const
   // OPENEVSE_LCD_OFF=0, RED=1, GREEN=2, YELLOW=3, BLUE=4, VIOLET=5, TEAL=6, WHITE=7
   // Actual EVSE state-to-color mapping:
   // NOT_CONNECTED -> GREEN (2), CONNECTED -> YELLOW (3), CHARGING -> TEAL (6)
+  // VENT_REQUIRED and other errors -> RED (1)
   int stateIdx = -1;
   switch (lcdCol) {
     case OPENEVSE_LCD_OFF:    stateIdx = 0; break;  // off
-    case OPENEVSE_LCD_RED:    stateIdx = 1; break;  // error
+    case OPENEVSE_LCD_RED:    stateIdx = 1; break;  // error (includes vent_required)
     case OPENEVSE_LCD_GREEN:  stateIdx = 2; break;  // ready (NOT_CONNECTED)
     case OPENEVSE_LCD_YELLOW: stateIdx = 3; break;  // waiting (CONNECTED)
     case OPENEVSE_LCD_TEAL:   stateIdx = 4; break;  // charging (CHARGING)
-    case OPENEVSE_LCD_VIOLET: stateIdx = 5; break;  // vent_required
-    case OPENEVSE_LCD_BLUE:   stateIdx = 7; break;  // default (unused in normal operation)
-    case OPENEVSE_LCD_WHITE:  stateIdx = 7; break;  // default
+    case OPENEVSE_LCD_VIOLET: stateIdx = -1; break; // disabled/sleeping (vehicle not connected) - no override
+    case OPENEVSE_LCD_BLUE:   stateIdx = 6; break;  // default (unused in normal operation)
+    case OPENEVSE_LCD_WHITE:  stateIdx = 6; break;  // default
   }
   
-  // Check "all" override first (index 8)
-  if (_overrides[8].active && !_overrides[8].isExpired()) {
-    return _overrides[8].color;
+  // Check "all" override first (index 7)
+  if (_overrides[7].active && !_overrides[7].isExpired()) {
+    return _overrides[7].color;
   }
   
   // Check state-specific override
@@ -158,18 +159,18 @@ uint8_t LedManagerTask::getEffectiveBrightness(uint8_t lcdCol) const
   int stateIdx = -1;
   switch (lcdCol) {
     case OPENEVSE_LCD_OFF:    stateIdx = 0; break;  // off
-    case OPENEVSE_LCD_RED:    stateIdx = 1; break;  // error
+    case OPENEVSE_LCD_RED:    stateIdx = 1; break;  // error (includes vent_required)
     case OPENEVSE_LCD_GREEN:  stateIdx = 2; break;  // ready (NOT_CONNECTED)
     case OPENEVSE_LCD_YELLOW: stateIdx = 3; break;  // waiting (CONNECTED)
     case OPENEVSE_LCD_TEAL:   stateIdx = 4; break;  // charging (CHARGING)
-    case OPENEVSE_LCD_VIOLET: stateIdx = 5; break;  // vent_required
-    case OPENEVSE_LCD_BLUE:   stateIdx = 7; break;  // default (unused in normal operation)
-    case OPENEVSE_LCD_WHITE:  stateIdx = 7; break;  // default
+    case OPENEVSE_LCD_VIOLET: stateIdx = -1; break; // disabled/sleeping (vehicle not connected) - no override
+    case OPENEVSE_LCD_BLUE:   stateIdx = 6; break;  // default (unused in normal operation)
+    case OPENEVSE_LCD_WHITE:  stateIdx = 6; break;  // default
   }
   
   // Check "all" override first
-  if (_overrides[8].active && !_overrides[8].isExpired() && _overrides[8].brightness > 0) {
-    return _overrides[8].brightness;
+  if (_overrides[7].active && !_overrides[7].isExpired() && _overrides[7].brightness > 0) {
+    return _overrides[7].brightness;
   }
   
   // Check state-specific override
@@ -891,7 +892,8 @@ void LedManagerTask::updateColors()
 // Maps API state strings to override array indices
 // Note: Indices correspond to EVSE states:
 //   0=off, 1=error, 2=ready (NOT_CONNECTED->GREEN), 3=waiting (CONNECTED->YELLOW),
-//   4=charging (CHARGING->TEAL), 5=vent_required, 6=custom, 7=default, 8=all
+//   4=charging (CHARGING->TEAL), 5=custom, 6=default, 7=all
+// Note: vent_required is treated as an error and uses the error override
 int LedManagerTask::getOverrideIndex(const char* stateStr) const
 {
   if (strcmp(stateStr, "off") == 0) return 0;
@@ -899,10 +901,9 @@ int LedManagerTask::getOverrideIndex(const char* stateStr) const
   if (strcmp(stateStr, "ready") == 0) return 2;
   if (strcmp(stateStr, "waiting") == 0) return 3;
   if (strcmp(stateStr, "charging") == 0) return 4;
-  if (strcmp(stateStr, "vent_required") == 0) return 5;
-  if (strcmp(stateStr, "custom") == 0) return 6;
-  if (strcmp(stateStr, "default") == 0) return 7;
-  if (strcmp(stateStr, "all") == 0) return 8;
+  if (strcmp(stateStr, "custom") == 0) return 5;
+  if (strcmp(stateStr, "default") == 0) return 6;
+  if (strcmp(stateStr, "all") == 0) return 7;
   return -1;
 }
 
@@ -932,7 +933,7 @@ void LedManagerTask::clearColorOverride(const char* stateStr)
 {
   if (stateStr == nullptr) {
     // Clear all overrides
-    for (int i = 0; i < 9; i++) {
+    for (int i = 0; i < 8; i++) {
       _overrides[i].active = false;
     }
     DBUGF("All LED overrides cleared");
@@ -954,7 +955,7 @@ void LedManagerTask::checkOverrideTimeouts()
   unsigned long nextTimeout = 0;
   unsigned long now = millis();
   
-  for (int i = 0; i < 9; i++) {
+  for (int i = 0; i < 8; i++) {
     if (_overrides[i].isExpired()) {
       _overrides[i].active = false;
       anyExpired = true;
