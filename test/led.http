@@ -1,0 +1,80 @@
+### LED Color Override Tests
+### These tests require VS Code REST Client extension
+
+@baseUrl = http://openevse.local
+# @baseUrl = http://192.168.1.100
+
+### Set LED color override for "waiting" state to orange with 50% brightness for 2 hours
+POST {{baseUrl}}/led
+Content-Type: application/json
+
+{
+  "state": "waiting",
+  "color": "#FFA500",
+  "brightness": 128,
+  "timeout": 2
+}
+
+### Set LED color override for "charging" state to bright green for 1 hour
+POST {{baseUrl}}/led
+Content-Type: application/json
+
+{
+  "state": "charging",
+  "color": "#00FF00",
+  "brightness": 255,
+  "timeout": 1
+}
+
+### Set LED color override for "all" states to purple with no timeout (manual reset required)
+POST {{baseUrl}}/led
+Content-Type: application/json
+
+{
+  "state": "all",
+  "color": "#800080",
+  "timeout": 0
+}
+
+### Set LED color override for "error" state to red, use default brightness, 5 hour timeout
+POST {{baseUrl}}/led
+Content-Type: application/json
+
+{
+  "state": "error",
+  "color": "#FF0000",
+  "brightness": 0,
+  "timeout": 5
+}
+
+### Clear all LED color overrides
+DELETE {{baseUrl}}/led
+
+### Invalid state test (should return 400)
+POST {{baseUrl}}/led
+Content-Type: application/json
+
+{
+  "state": "invalid_state",
+  "color": "#FF0000",
+  "timeout": 1
+}
+
+### Invalid color format test (should return 400)
+POST {{baseUrl}}/led
+Content-Type: application/json
+
+{
+  "state": "waiting",
+  "color": "FF0000",
+  "timeout": 1
+}
+
+### Missing parameters test (should return 400)
+POST {{baseUrl}}/led
+Content-Type: application/json
+
+{
+  "state": "waiting",
+  "color": "#FF0000"
+}

@@ -43,6 +43,42 @@ class LedManagerTask : public MicroTasks::Task
 
     MicroTasks::EventListener onStateChange;
 
+    // LED color override state management
+    struct ColorOverride {
+      bool active;
+      uint32_t color;
+      uint8_t brightness;  // 0 = use global brightness, 1-255 = override brightness
+      unsigned long timeout_ms;  // 0 = no timeout
+      unsigned long set_time_ms;  // millis() when override was set
+      
+      ColorOverride() : active(false), color(0), brightness(0), timeout_ms(0), set_time_ms(0) {}
+      
+      bool isExpired() const {
+        if (!active || timeout_ms == 0) return false;
+        return (millis() - set_time_ms) >= timeout_ms;
+      }
+    };
+    
+    // Override state for each LED state
+    ColorOverride _overrides[9];  // One for each: off, error, ready, waiting, charging, vent_required, custom, default, all
+    
+    // Helper to get override index from state string
+    int getOverrideIndex(const char* stateStr) const;
+    
+    // Check if any override has expired and clear it
+    void checkOverrideTimeouts();
+    
+    // Calculate next timeout check interval (returns 0 for no active timeouts)
+    unsigned long getNextTimeoutCheck() const;
+    
+#if RGB_LED
+    // Apply color override if active for the given LCD color state
+    uint32_t applyColorOverride(uint8_t lcdCol) const;
+    
+    // Get effective brightness considering overrides
+    uint8_t getEffectiveBrightness(uint8_t lcdCol) const;
+#endif
+
 #if RGB_LED
 #if defined(NEO_PIXEL_PIN) && defined(NEO_PIXEL_LENGTH) && defined(ENABLE_WS2812FX)
     void setAllRGB(uint32_t color, u_int8_t mode, u_int16_t speed);
@@ -80,6 +116,10 @@ class LedManagerTask : public MicroTasks::Task
 
     void setBrightness(uint8_t brightness);
     void updateColors();
+    
+    // LED color override API
+    bool setColorOverride(const char* stateStr, uint32_t color, uint8_t brightness, unsigned long timeout_hours);
+    void clearColorOverride(const char* stateStr = nullptr);  // nullptr clears all
 };
 
 extern LedManagerTask ledManager;

@@ -119,6 +119,66 @@ uint8_t buttonShareState = 0;
 
 #define rgb(r,g,b) (r<<16|g<<8|b)
 
+// Helper method to apply color overrides based on EVSE state
+uint32_t LedManagerTask::applyColorOverride(uint8_t lcdCol) const
+{
+  // Map LCD color to override index
+  // OPENEVSE_LCD_OFF=0, RED=1, GREEN=2, YELLOW=3, BLUE=4, VIOLET=5, TEAL=6, WHITE=7
+  int stateIdx = -1;
+  switch (lcdCol) {
+    case OPENEVSE_LCD_OFF:    stateIdx = 0; break;  // off
+    case OPENEVSE_LCD_RED:    stateIdx = 1; break;  // error
+    case OPENEVSE_LCD_GREEN:  stateIdx = 4; break;  // charging
+    case OPENEVSE_LCD_YELLOW: stateIdx = 3; break;  // waiting
+    case OPENEVSE_LCD_BLUE:   stateIdx = 2; break;  // ready
+    case OPENEVSE_LCD_VIOLET: stateIdx = 5; break;  // vent_required
+    case OPENEVSE_LCD_TEAL:   stateIdx = 6; break;  // custom
+    case OPENEVSE_LCD_WHITE:  stateIdx = 7; break;  // default
+  }
+  
+  // Check "all" override first (index 8)
+  if (_overrides[8].active && !_overrides[8].isExpired()) {
+    return _overrides[8].color;
+  }
+  
+  // Check state-specific override
+  if (stateIdx >= 0 && _overrides[stateIdx].active && !_overrides[stateIdx].isExpired()) {
+    return _overrides[stateIdx].color;
+  }
+  
+  // No override, return 0 to indicate use default color
+  return 0;
+}
+
+// Helper to get effective brightness considering overrides
+uint8_t LedManagerTask::getEffectiveBrightness(uint8_t lcdCol) const
+{
+  int stateIdx = -1;
+  switch (lcdCol) {
+    case OPENEVSE_LCD_OFF:    stateIdx = 0; break;
+    case OPENEVSE_LCD_RED:    stateIdx = 1; break;
+    case OPENEVSE_LCD_GREEN:  stateIdx = 4; break;
+    case OPENEVSE_LCD_YELLOW: stateIdx = 3; break;
+    case OPENEVSE_LCD_BLUE:   stateIdx = 2; break;
+    case OPENEVSE_LCD_VIOLET: stateIdx = 5; break;
+    case OPENEVSE_LCD_TEAL:   stateIdx = 6; break;
+    case OPENEVSE_LCD_WHITE:  stateIdx = 7; break;
+  }
+  
+  // Check "all" override first
+  if (_overrides[8].active && !_overrides[8].isExpired() && _overrides[8].brightness > 0) {
+    return _overrides[8].brightness;
+  }
+  
+  // Check state-specific override
+  if (stateIdx >= 0 && _overrides[stateIdx].active && !_overrides[stateIdx].isExpired() && _overrides[stateIdx].brightness > 0) {
+    return _overrides[stateIdx].brightness;
+  }
+  
+  // Use global brightness (adjusted by +1 as per setBrightness logic)
+  return this->brightness;
+}
+
 #if defined(NEO_PIXEL_PIN) && defined(NEO_PIXEL_LENGTH) && defined(ENABLE_WS2812FX)
 
 static uint32_t status_colour_map(u_int8_t lcdcol)
@@ -260,9 +320,21 @@ unsigned long LedManagerTask::loop(MicroTasks::WakeReason reason)
 {
   LEDTRACE("LED manager woke (%lu) state=%d", (unsigned long)reason, (int)state);
 
+  // Check if any color overrides have expired
+  checkOverrideTimeouts();
+
   if(onStateChange.IsTriggered()) {
     setNewState(false);
   }
+  
+  // Helper lambda to return appropriate timeout considering LED override timeouts
+  auto returnWithTimeout = [this](unsigned long baseTimeout) -> unsigned long {
+    unsigned long nextCheck = getNextTimeoutCheck();
+    if (nextCheck > 0 && (baseTimeout == 0 || nextCheck < baseTimeout)) {
+      return nextCheck;
+    }
+    return baseTimeout > 0 ? baseTimeout : MicroTask.Infinate;
+  };
 
 #if RGB_LED
 #if defined(NEO_PIXEL_PIN) && defined(NEO_PIXEL_LENGTH) && defined(ENABLE_WS2812FX)
@@ -271,7 +343,7 @@ unsigned long LedManagerTask::loop(MicroTasks::WakeReason reason)
     case LedState_Off:
       //setAllRGB(0, 0, 0);
       ws2812fx.setColor(BLACK);
-      return MicroTask.Infinate;
+      return returnWithTimeout(0);
 
     case LedState_Test_Red:
       //setAllRGB(255, 0, 0);
@@ -301,6 +373,13 @@ unsigned long LedManagerTask::loop(MicroTasks::WakeReason reason)
     {
       uint8_t lcdCol = _evse->getStateColour();
       uint32_t col = status_colour_map(lcdCol);
+      
+      // Apply color override if active
+      uint32_t overrideCol = applyColorOverride(lcdCol);
+      if (overrideCol != 0) {
+        col = overrideCol;
+      }
+      
       bool isCharging = _evse->isCharging();
       bool isError = _evse->isError();
       u_int16_t speed;
@@ -310,11 +389,14 @@ unsigned long LedManagerTask::loop(MicroTasks::WakeReason reason)
       } else {
         speed = 2000 - ((_evse->getChargeCurrent()/_evse->getMaxHardwareCurrent())*1000);
       }
-      if (this->brightness == 0){
+      
+      // Apply effective brightness (with override support)
+      uint8_t effectiveBrightness = getEffectiveBrightness(lcdCol);
+      if (effectiveBrightness == 0){
         ws2812fx.setBrightness(255);
       }
       else {
-        ws2812fx.setBrightness(this->brightness-1);
+        ws2812fx.setBrightness(effectiveBrightness-1);
       }
       switch(state)
       {
@@ -326,7 +408,7 @@ unsigned long LedManagerTask::loop(MicroTasks::WakeReason reason)
           } else {
             setAllRGB(col, FX_MODE_STATIC, DEFAULT_FX_SPEED);
           }
-          return MicroTask.Infinate;
+          return returnWithTimeout(0);
 
         case LedState_WiFi_Access_Point_Waiting:
           setEvseAndWifiRGB(col, FX_MODE_BLINK, CONNECTING_FX_SPEED);
@@ -344,7 +426,7 @@ unsigned long LedManagerTask::loop(MicroTasks::WakeReason reason)
 
         case LedState_WiFi_Client_Connected:
           setEvseAndWifiRGB(col, FX_MODE_FADE, CONNECTED_FX_SPEED);
-          return MicroTask.Infinate;
+          return returnWithTimeout(0);
 
         default:
           break;
@@ -357,7 +439,7 @@ unsigned long LedManagerTask::loop(MicroTasks::WakeReason reason)
   {
     case LedState_Off:
       setAllRGB(0, 0, 0);
-      return MicroTask.Infinate;
+      return returnWithTimeout(0);
 
     case LedState_Test_Red:
       setAllRGB(255, 0, 0);
@@ -385,6 +467,13 @@ unsigned long LedManagerTask::loop(MicroTasks::WakeReason reason)
       uint8_t lcdCol = _evse->getStateColour();
       DBUGVAR(lcdCol);
       uint32_t col = get_colour_map_entry(lcdCol);
+      
+      // Apply color override if active
+      uint32_t overrideCol = applyColorOverride(lcdCol);
+      if (overrideCol != 0) {
+        col = overrideCol;
+      }
+      
       DBUGVAR(col, HEX);
       uint8_t evseR = (col >> 16) & 0xff;
       uint8_t evseG = (col >> 8) & 0xff;
@@ -394,7 +483,7 @@ unsigned long LedManagerTask::loop(MicroTasks::WakeReason reason)
       {
         case LedState_Evse_State:
           setAllRGB(evseR, evseG, evseB);
-          return MicroTask.Infinate;
+          return returnWithTimeout(0);
 
         case LedState_WiFi_Access_Point_Waiting:
           setEvseAndWifiRGB(evseR, evseG, evseB, flashState ? 255 : 0, flashState ? 255 : 0, 0);
@@ -413,7 +502,7 @@ unsigned long LedManagerTask::loop(MicroTasks::WakeReason reason)
 
         case LedState_WiFi_Client_Connected:
           setEvseAndWifiRGB(evseR, evseG, evseB, 0, 255, 0);
-          return MicroTask.Infinate;
+          return returnWithTimeout(0);
 
         default:
           break;
@@ -425,12 +514,19 @@ unsigned long LedManagerTask::loop(MicroTasks::WakeReason reason)
       uint8_t lcdCol = _evse->getStateColour();
       DBUGVAR(lcdCol);
       uint32_t col = get_colour_map_entry(lcdCol);
+      
+      // Apply color override if active
+      uint32_t overrideCol = applyColorOverride(lcdCol);
+      if (overrideCol != 0) {
+        col = overrideCol;
+      }
+      
       DBUGVAR(col, HEX);
       uint8_t r = (col >> 16) & 0xff;
       uint8_t g = (col >> 8) & 0xff;
       uint8_t b = col & 0xff;
       setAllRGB(r, g, b);
-    } return MicroTask.Infinate;
+    } return returnWithTimeout(0);
 
     case LedState_WiFi_Access_Point_Waiting:
       setAllRGB(flashState ? 255 : 0, flashState ? 255 : 0, 0);
@@ -468,7 +564,7 @@ unsigned long LedManagerTask::loop(MicroTasks::WakeReason reason)
 
     case LedState_Off:
       setWiFiLed(!WIFI_LED_ON_STATE);
-      return MicroTask.Infinate;
+      return returnWithTimeout(0);
 
     case LedState_WiFi_Access_Point_Waiting:
       setWiFiLed(flashState ? WIFI_LED_ON_STATE : !WIFI_LED_ON_STATE);
@@ -487,14 +583,14 @@ unsigned long LedManagerTask::loop(MicroTasks::WakeReason reason)
 
     case LedState_WiFi_Client_Connected:
       setWiFiLed(WIFI_LED_ON_STATE);
-      return MicroTask.Infinate;
+      return returnWithTimeout(0);
 
     default:
       break;
   }
 #endif
 
-  return MicroTask.Infinate;
+  return returnWithTimeout(0);
 }
 
 /*
@@ -786,6 +882,109 @@ void LedManagerTask::updateColors()
   DBUGF("LED colors updated from config");
   // Wake the task to refresh the LED state with new colors
   setNewState(true);
+}
+
+// ===== LED Color Override Implementation =====
+
+int LedManagerTask::getOverrideIndex(const char* stateStr) const
+{
+  if (strcmp(stateStr, "off") == 0) return 0;
+  if (strcmp(stateStr, "error") == 0) return 1;
+  if (strcmp(stateStr, "ready") == 0) return 2;
+  if (strcmp(stateStr, "waiting") == 0) return 3;
+  if (strcmp(stateStr, "charging") == 0) return 4;
+  if (strcmp(stateStr, "vent_required") == 0) return 5;
+  if (strcmp(stateStr, "custom") == 0) return 6;
+  if (strcmp(stateStr, "default") == 0) return 7;
+  if (strcmp(stateStr, "all") == 0) return 8;
+  return -1;
+}
+
+bool LedManagerTask::setColorOverride(const char* stateStr, uint32_t color, uint8_t brightness, unsigned long timeout_hours)
+{
+  int idx = getOverrideIndex(stateStr);
+  if (idx < 0) {
+    DBUGF("Invalid LED state: %s", stateStr);
+    return false;
+  }
+  
+  _overrides[idx].active = true;
+  _overrides[idx].color = color;
+  _overrides[idx].brightness = brightness;
+  _overrides[idx].timeout_ms = timeout_hours > 0 ? (timeout_hours * 3600UL * 1000UL) : 0;
+  _overrides[idx].set_time_ms = millis();
+  
+  DBUGF("LED override set for state %s: color=0x%06X, brightness=%d, timeout=%lu hours", 
+        stateStr, color, brightness, timeout_hours);
+  
+  // Wake the task to apply the new color immediately
+  MicroTask.wakeTask(this);
+  return true;
+}
+
+void LedManagerTask::clearColorOverride(const char* stateStr)
+{
+  if (stateStr == nullptr) {
+    // Clear all overrides
+    for (int i = 0; i < 9; i++) {
+      _overrides[i].active = false;
+    }
+    DBUGF("All LED overrides cleared");
+  } else {
+    int idx = getOverrideIndex(stateStr);
+    if (idx >= 0) {
+      _overrides[idx].active = false;
+      DBUGF("LED override cleared for state %s", stateStr);
+    }
+  }
+  
+  // Wake the task to restore normal colors
+  MicroTask.wakeTask(this);
+}
+
+void LedManagerTask::checkOverrideTimeouts()
+{
+  bool anyExpired = false;
+  unsigned long nextTimeout = 0;
+  unsigned long now = millis();
+  
+  for (int i = 0; i < 9; i++) {
+    if (_overrides[i].isExpired()) {
+      _overrides[i].active = false;
+      anyExpired = true;
+      DBUGF("LED override expired for index %d", i);
+    } else if (_overrides[i].active && _overrides[i].timeout_ms > 0) {
+      // Calculate when this override will expire
+      unsigned long expiresAt = _overrides[i].set_time_ms + _overrides[i].timeout_ms;
+      if (nextTimeout == 0 || expiresAt < nextTimeout) {
+        nextTimeout = expiresAt;
+      }
+    }
+  }
+  
+  if (anyExpired) {
+    // Wake the task to restore normal colors
+    setNewState(true);
+  }
+}
+
+unsigned long LedManagerTask::getNextTimeoutCheck() const
+{
+  unsigned long nextTimeout = 0;
+  unsigned long now = millis();
+  
+  for (int i = 0; i < 9; i++) {
+    if (_overrides[i].active && _overrides[i].timeout_ms > 0) {
+      unsigned long expiresAt = _overrides[i].set_time_ms + _overrides[i].timeout_ms;
+      unsigned long remaining = (expiresAt > now) ? (expiresAt - now) : 0;
+      
+      if (remaining > 0 && (nextTimeout == 0 || remaining < nextTimeout)) {
+        nextTimeout = remaining;
+      }
+    }
+  }
+  
+  return nextTimeout;
 }
 
 

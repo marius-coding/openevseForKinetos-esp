@@ -233,6 +233,9 @@ void Mqtt::subscribeTopics() {
   _mqttclient.subscribe(mqtt_topic + "/pause_display_update"); yield();
   _mqttclient.subscribe(mqtt_topic + "/resume_display_update"); yield();
   _mqttclient.subscribe(mqtt_topic + "/set_display_text"); yield();
+  // LED control
+  _mqttclient.subscribe(mqtt_topic + "/led/set"); yield();
+  _mqttclient.subscribe(mqtt_topic + "/led/reset"); yield();
 
   DBUGLN("MQTT Subscriptions complete");
 }
@@ -423,6 +426,38 @@ void Mqtt::handleMqttMessage(MongooseString topic, MongooseString payload) {
       lcd.pauseLine(0);
       lcd.setExternalText(0, payload_str.c_str());
     }
+  }
+  else if (topic_string == mqtt_topic + "/led/set") {
+    // Expect payload format: {"state":"waiting","color":"#ABCDEF","brightness":255,"timeout":5}
+    DynamicJsonDocument doc(256);
+    DeserializationError err = deserializeJson(doc, payload_str);
+    if(!err && doc.containsKey("state") && doc.containsKey("color") && doc.containsKey("timeout")) {
+      const char* state = doc["state"];
+      const char* colorHex = doc["color"];
+      uint8_t brightness = doc["brightness"] | 0;  // 0 = use global brightness
+      unsigned long timeout = doc["timeout"];
+      
+      // Parse hex color (#RRGGBB)
+      uint32_t color = 0;
+      if (colorHex[0] == '#' && strlen(colorHex) == 7) {
+        color = strtoul(colorHex + 1, nullptr, 16);
+        
+        if (ledManager.setColorOverride(state, color, brightness, timeout)) {
+          DBUGF("LED override set via MQTT: state=%s, color=%s, brightness=%d, timeout=%lu", 
+                state, colorHex, brightness, timeout);
+        } else {
+          DBUGF("Failed to set LED override: invalid state=%s", state);
+        }
+      } else {
+        DBUGF("Invalid color format: %s", colorHex);
+      }
+    } else {
+      DBUGF("Invalid LED set payload");
+    }
+  }
+  else if (topic_string == mqtt_topic + "/led/reset") {
+    ledManager.clearColorOverride();
+    DBUGF("LED overrides cleared via MQTT");
   }
   else { // RAPI commands
     int rapi_character_index = topic_string.indexOf('$');

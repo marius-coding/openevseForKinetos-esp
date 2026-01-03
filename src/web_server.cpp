@@ -1037,6 +1037,64 @@ handleTestLed(MongooseHttpServerRequest *request) {
 }
 
 // -------------------------------------------------------------------
+// LED Color Override Control
+// url: /led
+// POST body: {"state":"waiting","color":"#ABCDEF","brightness":255,"timeout":5}
+// DELETE: clears all LED overrides
+// -------------------------------------------------------------------
+void
+handleLed(MongooseHttpServerRequest *request) {
+  MongooseHttpServerResponseStream *response;
+  if(false == requestPreProcess(request, response, CONTENT_TYPE_JSON)) {
+    return;
+  }
+
+  if (HTTP_POST == request->method()) {
+    String body = request->body().toString();
+    const size_t capacity = JSON_OBJECT_SIZE(4) + 128;
+    DynamicJsonDocument doc(capacity);
+    DeserializationError error = deserializeJson(doc, body);
+    
+    if(!error && doc.containsKey("state") && doc.containsKey("color") && doc.containsKey("timeout")) {
+      const char* state = doc["state"];
+      const char* colorHex = doc["color"];
+      uint8_t brightness = doc["brightness"] | 0;  // 0 = use global brightness
+      unsigned long timeout = doc["timeout"];
+      
+      // Parse hex color (#RRGGBB)
+      uint32_t color = 0;
+      if (colorHex[0] == '#' && strlen(colorHex) == 7) {
+        color = strtoul(colorHex + 1, nullptr, 16);
+        
+        if (ledManager.setColorOverride(state, color, brightness, timeout)) {
+          response->setCode(200);
+          response->print("{\"msg\":\"done\"}");
+        } else {
+          response->setCode(400);
+          response->print("{\"msg\":\"Invalid state value\"}");
+        }
+      } else {
+        response->setCode(400);
+        response->print("{\"msg\":\"Invalid color format\"}");
+      }
+    } else {
+      response->setCode(400);
+      response->print("{\"msg\":\"Missing required parameters\"}");
+    }
+    request->send(response);
+  } else if (HTTP_DELETE == request->method()) {
+    ledManager.clearColorOverride();
+    response->setCode(200);
+    response->print("{\"msg\":\"done\"}");
+    request->send(response);
+  } else {
+    response->setCode(405);
+    response->print("{\"msg\":\"Method not allowed\"}");
+    request->send(response);
+  }
+}
+
+// -------------------------------------------------------------------
 // Emoncms describe end point,
 // Allows local device discover using https://github.com/emoncms/find
 // url: //emoncms/describe
@@ -1303,7 +1361,7 @@ void web_server_setup()
   server.on("/status$", handleStatus);
   server.on("/config$", handleConfig);
   server.on("/testled$", handleTestLed);
-  server.on("/testled$", handleTestLed);
+  server.on("/led$", handleLed);
 
   // Handle HTTP web interface button presses
   server.on("/teslaveh$", handleTeslaVeh);
